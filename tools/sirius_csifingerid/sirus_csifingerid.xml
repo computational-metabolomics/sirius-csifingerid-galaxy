@@ -1,0 +1,120 @@
+<tool id="sirius_csifingerid" name="SIRIUS-CSI:FingerID" version="0.1.0">
+    <description> </description>
+    <requirements>
+        <requirement type="package" version="1.3.0">argparse</requirement>
+    </requirements>
+    <command detect_errors="exit_code">
+    <![CDATA[
+        #set $tool_directory = $getVar('__tool_directory__', '../../../../tools/sirius_csifingerid')
+        python $tool_directory/fingerid.py
+            --input "$input"
+            --db_online '$db_online'
+            --profile $profile
+            --candidates $candidates
+            --ppm_max $ppm_max
+            --polarity $polarity
+            --results '$results'
+            --tool_directory '$tool_directory'
+    ]]></command>
+    <inputs>
+        <param name="input" type="data" format="msp,txt" label="MSP file (Output from Create MSP tool)" argument="--input"/>
+        <param name="db_online" type="select" label="Select SIRIUS-CSI:FingerID Database" argument="--db_online">
+            <option value="PubChem" selected="true">PubChem</option>
+            <option value="hmdb">HMDB</option>
+            <option value="kegg">KEGG</option>
+            <option value="knapsack">KNApSAcK</option>
+            <option value="biocyc">BioCyc</option>
+            <option value="all">All (see help)</option>
+        </param>
+        <param name="ppm_max" type="integer" value="10" label="Mass deviation of the fragment peaks in ppm" argument="--ppm_max"/>
+        <param name="candidates" type="integer" value="5" label="The maximum number of candidates in the output" argument="--candidates"/>
+        <param name="polarity" type="select" label="Ion Mode" argument="--polarity">
+            <option value="pos" selected="true">Positive</option>
+            <option value="neg">Negative</option>
+        </param>
+        <param name="profile" type="select" label="Analysis used" argument="--profile">
+            <option value="orbitrap" selected="true">Orbitrap</option>
+            <option value="qtof">qTOF</option>
+            <option value="fticr">FT-ICR</option>
+        </param>
+    </inputs>
+    <outputs>
+        <data name="results" format="tabular" label="${tool.name} results of ${input.name}"/>
+    </outputs>
+    <tests>
+        <test>
+            <param name="input" value="input.msp"/>
+            <output name="results" file="sirus_csifingerid.tabular"/>
+        </test>
+    </tests>
+    <help>
+----------------
+SIRIUS-FingerID
+----------------
+
+Description
+-----------
+
+| SIRIUS is a java-based software framework for discovering a landscape of de-novo identification of metabolites using single and tandem mass spectrometry.
+| SIRIUS uses isotope pattern analysis for detecting the molecular formula and further analyses the fragmentation pattern of a compound using fragmentation trees.
+| Website: https://bio.informatik.uni-jena.de/software/sirius/
+|
+
+Parameters
+----------
+
+**\1. MSP file**
+
+MSP file created using *Create MSP* tool
+
+**\2. Select SIRIUS-CSI:FingerID Databases**
+
+The following databases are available:
+
+* PubChem (default)
+
+* hmdb
+
+* kegg
+
+* knapsack
+
+* biocyc
+
+* all (SIRIUS will consider all m/z possible molecular formulas) 
+
+**\3. Allowed mass deviation of the fragment peaks in ppm**
+
+**\4. The maximum number of candidates in the output**
+
+Set the top X candidates to return.
+
+**\5. Ion Mode**
+
+* Positive
+
+* Negative
+
+**\6. Analysis used**
+
+* Orbitrap
+
+* qTOF
+
+* FT-ICR
+
+If you want to analyze spectra measured with Orbitrap or FT-ICR, you should specify the appropriate analysis profile. A profile is a set of configuration options and scoring functions SIRIUS 3 will use for its analysis. For example, the Orbitrap and FT-ICR profiles having tighter constraints for the allowed mass deviation but do not rely so much on the intensity of isotope peaks.
+
+
+Developers and contributors
+---------------------------
+
+- **Jordi Capellades (j.capellades.to@gmail.com) - Universitat Rovira i Virgili (SP)**
+- **Ralf Weber (r.j.weber@bham.ac.uk) - University of Birmingham (UK)**
+
+    </help>
+    <citations>
+        <citation type="doi">10.1073/pnas.1509788112</citation>
+        <citation type="doi">10.1093/bioinformatics/btu275</citation>
+    </citations>
+</tool> 
