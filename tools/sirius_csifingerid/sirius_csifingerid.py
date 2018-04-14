@@ -1,5 +1,6 @@
 import argparse
 import os
+import os
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--input')
@@ -9,7 +10,7 @@ parser.add_argument('--candidates')
 parser.add_argument('--ppm_max')
 parser.add_argument('--polarity')
 parser.add_argument('--results')
-parser.add_argument('--tool_directory')
+parser.add_argument('--out_dir')
 
 args = parser.parse_args()
 print args
@@ -40,7 +41,9 @@ with open(args.input,"r") as infile:
             else:
                 numlines = 0 #reset for next header
                 #write spec file
-                with open('./tmpspec.txt', 'w') as outfile:
+                specpth = os.path.join(args.out_dir,'tmpspec.txt')
+                tmpdir = os.path.join(args.out_dir,'tempout')
+                with open(specpth, 'w') as outfile:
                     for p in peaklist:
                         outfile.write(p[0]+" "+p[1]+"\n")
                 #create commandline input
@@ -48,16 +51,16 @@ with open(args.input,"r") as infile:
                     ion = "[M+H]+"
                 else:
                     ion = "[M-H]-"
-                cmd_command = args.tool_directory+"/bin/sirius "
-                cmd_command += "-c {0} -o ./tempout -i {1} -z {2} -2 ./tmpspec.txt ".format(args.candidates, ion, mz)
-                cmd_command += "-d {0} --ppm-max {1} --fingerid".format(args.db_online, args.ppm_max)
+                cmd_command = "sirius "
+                cmd_command += "-c {} -o {} -i {} -z {} -2 {} ".format(args.candidates, tmpdir , ion, mz, specpth)
+                cmd_command += "-d {} --ppm-max {} --fingerid".format(args.db_online, args.ppm_max)
                 # run
                 print cmd_command
                 os.system(cmd_command)
                 # if fingerid found hits
-                if os.path.exists("./tempout/1_tmpspec_/summary_csi_fingerid.csv"):
+                if os.path.exists(os.path.join(tmpdir, "1_tmpspec_", "summary_csi_fingerid.csv")):
                     with open(args.results, 'a') as outfile:
-                        with open("./tempout/1_tmpspec_/summary_csi_fingerid.csv") as infile:
+                        with open(os.path.join(tmpdir, "1_tmpspec_", "summary_csi_fingerid.csv")) as infile:
                             for line in infile:
                                 if "inchi" in line:
                                     if first_read:
