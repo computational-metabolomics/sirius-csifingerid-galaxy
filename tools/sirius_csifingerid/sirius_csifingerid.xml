@@ -5,7 +5,7 @@
     </requirements>
     <command detect_errors="exit_code"  interpreter="python">
     <![CDATA[
-    
+    #set $tool_directory = $getVar('__tool_directory__', '../../../../tools/sirius_csifingerid')
         sirius_csifingerid.py
             --input "$input"
             --db_online '$db_online'
@@ -13,8 +13,9 @@
             --candidates $candidates
             --ppm_max $ppm_max
             --polarity $polarity
-            --results '$results'
+            --results_name 'csi_results.tsv'
             --out_dir .
+            --tool_directory $tool_directory
             
     ]]></command>
     <inputs>
@@ -40,7 +41,7 @@
         </param>
     </inputs>
     <outputs>
-        <data name="results" format="tabular" label="${tool.name} results of ${input.name}"/>
+        <data name="results" format="tsv" label="${tool.name} results of ${input.name}" from_work_dir="csi_results.tsv"  />
     </outputs>
     <tests>
         <test>

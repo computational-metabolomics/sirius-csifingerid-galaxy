@@ -1,6 +1,6 @@
 tools/sirius_csifingerid/tool_test_output.*
-
-
+tools/tool_test_output.*
+tool_test_output.*
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -1,6 +1,8 @@
 import argparse
 import os
-import os
+import glob
+from subprocess import Popen, PIPE
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--input')
@@ -9,14 +11,15 @@ parser.add_argument('--profile')
 parser.add_argument('--candidates')
 parser.add_argument('--ppm_max')
 parser.add_argument('--polarity')
-parser.add_argument('--results')
+parser.add_argument('--results_name')
 parser.add_argument('--out_dir')
-
+parser.add_argument('--tool_directory')
 args = parser.parse_args()
 print args
 
+result_pth = os.path.join(args.out_dir, args.results_name)
 with open(args.input,"r") as infile:
-    first_read = True
+ 
     numlines = 0
     for line in infile:
         line = line.strip()
@@ -43,33 +46,43 @@ with open(args.input,"r") as infile:
                 #write spec file
                 specpth = os.path.join(args.out_dir,'tmpspec.txt')
                 tmpdir = os.path.join(args.out_dir,'tempout')
-                with open(specpth, 'w') as outfile:
+                with open(specpth, 'w') as outfile1:
                     for p in peaklist:
-                        outfile.write(p[0]+" "+p[1]+"\n")
-                #create commandline input
-                if args.polarity == "pos":
-                    ion = "[M+H]+"
-                else:
-                    ion = "[M-H]-"
-                cmd_command = "sirius "
+                        outfile1.write(p[0]+" "+p[1]+"\n")
+                    #create commandline input
+                    if args.polarity == "pos":
+                        ion = "[M+H]+"
+                    else:
+                        ion = "[M-H]-"
+                #cmd_command = os.path.join(args.tool_directory, 'bin', 'sirius ')
+                cmd_command = 'sirius '
                 cmd_command += "-c {} -o {} -i {} -z {} -2 {} ".format(args.candidates, tmpdir , ion, mz, specpth)
                 cmd_command += "-d {} --ppm-max {} --fingerid".format(args.db_online, args.ppm_max)
+
                 # run
                 print cmd_command
                 os.system(cmd_command)
+     
                 # if fingerid found hits
-                if os.path.exists(os.path.join(tmpdir, "1_tmpspec_", "summary_csi_fingerid.csv")):
-                    with open(args.results, 'a') as outfile:
-                        with open(os.path.join(tmpdir, "1_tmpspec_", "summary_csi_fingerid.csv")) as infile:
-                            for line in infile:
-                                if "inchi" in line:
+                mtching_files = glob.glob(os.path.join(tmpdir, "*_tmpspec_", "summary_csi_fingerid.csv"))
+                if mtching_files:
+                    first_read=True
+                    if len(mtching_files)>1:
+                        print 'multiple folder names being used', mtching_files
+                    latest_file = max(mtching_files, key=os.path.getmtime)
+ 
+                    with open(result_pth, 'a') as outfile2:
+
+                        with open(latest_file) as infile_csi:
+                            for iline in infile_csi:
+                                if "inchi" in iline:
                                     if first_read:
-                                        line = line.replace("inchi","InChI")
-                                        line = line.replace("rank", "Rank")
-                                        line = line.replace("name", "Name")
-                                        line = line.replace("score", "Score")
-                                        outfile.write("UID\t"+line)
+                                        iline = iline.replace("inchi","InChI")
+                                        iline = iline.replace("rank", "Rank")
+                                        iline = iline.replace("name", "Name")
+                                        iline = iline.replace("score", "Score")
+                                        outfile2.write("UID\t"+iline)
                                         first_read=False
                                 else:
-                                    outfile.write(featid+"\t"+ line)
+                                    outfile2.write(featid+"\t"+ iline)
 
