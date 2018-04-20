@@ -5,7 +5,8 @@
     </requirements>
     <command detect_errors="exit_code"  interpreter="python">
     <![CDATA[
-    #set $tool_directory = $getVar('__tool_directory__', '../../../../tools/sirius_csifingerid')
+
+       #set $tool_directory = $getVar('__tool_directory__', '../../../../tools/sirius_csifingerid')
         sirius_csifingerid.py
             --input "$input"
             --db_online '$db_online'
