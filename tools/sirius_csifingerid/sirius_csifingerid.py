@@ -1,6 +1,7 @@
 import argparse
 import os
 import glob
+import shutil
 from subprocess import Popen, PIPE
 
 
@@ -85,4 +86,5 @@ with open(args.input,"r") as infile:
                                         first_read=False
                                 else:
                                     outfile2.write(featid+"\t"+ iline)
+                shutil.rmtree(tmpdir)
 

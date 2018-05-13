@@ -22,19 +22,19 @@
     <inputs>
         <param name="input" type="data" format="msp,txt" label="MSP file (Output from Create MSP tool)" argument="--input"/>
         <param name="db_online" type="select" label="Select SIRIUS-CSI:FingerID Database" argument="--db_online">
-            <option value="PubChem" selected="true">PubChem</option>
-            <option value="hmdb">HMDB</option>
+            <option value="PubChem" >PubChem</option>
+            <option selected="true" value="hmdb">HMDB</option>
             <option value="kegg">KEGG</option>
             <option value="knapsack">KNApSAcK</option>
             <option value="biocyc">BioCyc</option>
-            <option value="all">All (see help)</option>
+            <option  value="all">All (see help)</option>
         </param>
         <param name="ppm_max" type="integer" value="10" label="Mass deviation of the fragment peaks in ppm" argument="--ppm_max"/>
         <param name="candidates" type="integer" value="5" label="The maximum number of candidates in the output" argument="--candidates"/>
         <param name="polarity" type="select" label="Ion Mode" argument="--polarity">
             <option value="pos" selected="true">Positive</option>
             <option value="neg">Negative</option>
-        </param>
+        </param> 
         <param name="profile" type="select" label="Analysis used" argument="--profile">
             <option value="orbitrap" selected="true">Orbitrap</option>
             <option value="qtof">qTOF</option>
