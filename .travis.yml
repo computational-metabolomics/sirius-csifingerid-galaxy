@@ -8,5 +8,5 @@ before_install:
  - pip install planemo
 
 script:
- - planemo lint ${TRAVIS_BUILD_DIR}/tools/sirius_csifingerid && planemo test   ${TRAVIS_BUILD_DIR}/tools/sirius_csifingerid --conda_ensure_channels tomnl,iuc,bioconda,conda-forge,defaults
+ - planemo lint ${TRAVIS_BUILD_DIR}/tools/sirius_csifingerid && planemo test   ${TRAVIS_BUILD_DIR}/tools/sirius_csifingerid --conda_ensure_channels tomnl,iuc,bioconda,conda-forge,defaults,anaconda
 
