@@ -48,7 +48,7 @@ with open(args.input,"r") as infile:
                 specpth = os.path.join(args.out_dir,'tmpspec.txt')
                 tmpdir = os.path.join(args.out_dir,'tempout')
                 if not os.path.exists(tmpdir):
-                    os.mkdir(tempdir)
+                    os.mkdir(tmpdir)
 
                 with open(specpth, 'w') as outfile1:
                     for p in peaklist:
@@ -86,7 +86,7 @@ with open(args.input,"r") as infile:
                                         iline = iline.replace("name", "Name")
                                         iline = iline.replace("score", "Score")
                                         outfile2.write("UID\t"+iline)
-                                        first_read=False
+                                        first_read = False
                                 else:
                                     outfile2.write(featid+"\t"+ iline)
                 shutil.rmtree(tmpdir)
