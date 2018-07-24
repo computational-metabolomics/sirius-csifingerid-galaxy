@@ -47,6 +47,9 @@ with open(args.input,"r") as infile:
                 #write spec file
                 specpth = os.path.join(args.out_dir,'tmpspec.txt')
                 tmpdir = os.path.join(args.out_dir,'tempout')
+                if not os.path.exists(tmpdir):
+                    os.mkdir(tempdir)
+
                 with open(specpth, 'w') as outfile1:
                     for p in peaklist:
                         outfile1.write(p[0]+" "+p[1]+"\n")
