@@ -6,7 +6,5 @@ description: "[Metabolomics][LC-MS][MS/MS] sirius csifingerid galaxy"
 auto_tool_repositories:
   name_template: "{{ tool_id }}"
   description_template: "[Metabolomics][LC-MS][MS/MS] {{ tool_name }} {{description}}"
-suite:
-  name: "suite_sirius_csifingerid_galaxy"
-  description: "wrappers for interacting with sirius csifingerid galaxy"
+
 long_description: "[Metabolomics][LC-MS][MS/MS] sirius csifingerid galaxy"
