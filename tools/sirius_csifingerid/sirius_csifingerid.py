@@ -4,12 +4,11 @@ import csv
 import sys
 import six
 import re
-import fnmatch
 import os
 import tempfile
 import multiprocessing
+import glob
 
-from subprocess import call
 from collections import defaultdict
 
 parser = argparse.ArgumentParser()
@@ -174,7 +173,7 @@ with open(args.input_pth, "r") as infile:
                 paramd['additional_details'] = {'name': meta_info['name']}
             elif args.meta_select_col == 'name_split':
                 # have additional columns split by "|" and then on ":" e.g. MZ:100.2 | RT:20 | xcms_grp_id:1
-                sampled = {sm.split(":")[0].strip(): sm.split(":")[1].strip() for sm in
+                paramd['additional_details'] = {sm.split(":")[0].strip(): sm.split(":")[1].strip() for sm in
                                meta_info['name'].split("|")}
             elif args.meta_select_col == 'all':
                 # have additional columns based on all the meta information extracted from the MSP
@@ -244,10 +243,7 @@ if int(args.cores_top_level) > 1:
 ######################################################################
 # outputs might have different headers. Need to get a list of all the headers before we start merging the files
 # outfiles = [os.path.join(wd, f) for f in glob.glob(os.path.join(wd, "*_metfrag_result.csv"))]
-outfiles = []
-for root, dirnames, filenames in os.walk(wd):
-    for filename in fnmatch.filter(filenames, 'summary_csi_fingerid.csv'):
-        outfiles.append(os.path.join(root, filename))
+outfiles = glob.glob(os.path.join(wd, '*', 'summary_csi_fingerid.csv'))
 
 print(outfiles)
 
@@ -260,23 +256,9 @@ for fn in outfiles:
             headers.extend(next(reader))
         else:
             headers.extend(reader.next())
-        # check if file has any data rows
-        for i, row in enumerate(reader):
-            c += 1
-            if i == 1:
-                break
+        break
 
-# if no data rows (e.g. matches) then do not save an output and leave the program
-if c == 0:
-    sys.exit()
-
-additional_detail_headers = []
-for k, paramd in six.iteritems(paramds):
-    ads = list(paramd['additional_details'].keys())
-    additional_detail_headers = list(set(additional_detail_headers + ads))
-
-
-headers = additional_detail_headers + sorted(list(set(headers)))
+headers = list(paramd['additional_details'].keys()) + headers
 
 
 with open(args.result_pth, 'a') as merged_outfile:
@@ -285,17 +267,15 @@ with open(args.result_pth, 'a') as merged_outfile:
     dwriter.writeheader()
 
     for fn in outfiles:
+        print(fn)
 
         with open(fn) as infile:
             reader = csv.DictReader(infile, delimiter='\t')
-            
-            if args.temp_dir:
-                ad = paramds[fn.split(os.sep)[1]]['additional_details']
-            else:
-                ad = paramds[fn.split(os.sep)[3]]['additional_details']
 
+            ad = paramds[fn.split(os.sep)[-2]]['additional_details']
 
             for line in reader:
+
                 line.update(ad)
 
                 dwriter.writerow(line)
