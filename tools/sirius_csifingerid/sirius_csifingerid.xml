@@ -1,4 +1,4 @@
-<tool id="sirius_csifingerid" name="SIRIUS-CSI:FingerID" version="0.1.0">
+<tool id="sirius_csifingerid" name="SIRIUS-CSI:FingerID" version="0.2.0">
     <description> </description>
     <requirements>
         <requirement type="package" version="4.0.1">sirius-csifingerid</requirement>
