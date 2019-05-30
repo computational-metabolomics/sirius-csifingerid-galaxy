@@ -8,7 +8,7 @@ import os
 import tempfile
 import multiprocessing
 import glob
-
+import uuid
 from collections import defaultdict
 
 parser = argparse.ArgumentParser()
@@ -34,12 +34,16 @@ print(args)
 
 
 if args.temp_dir:
-    wd = args.temp_dir
+    wd = os.path.join(args.temp_dir, 'temp')
+    os.mkdir(wd)
+
     if not os.path.exists(wd):
         os.mkdir(wd)
 
 else:
-    wd = tempfile.mkdtemp()
+    td = tempfile.mkdtemp()
+    wd = os.path.join(td, str(uuid.uuid4()))
+    os.mkdir(wd)
 
 ######################################################################
 # Setup parameter dictionary

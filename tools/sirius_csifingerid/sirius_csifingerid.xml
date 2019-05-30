@@ -20,6 +20,7 @@
             --meta_select_col $meta_select_col
             --minMSMSpeaks $minMSMSpeaks
             --schema $schema
+            --temp_dir .
 
 
 
@@ -66,10 +67,7 @@
         <data name="results" format="tsv" label="${tool.name} results of ${input.name}" from_work_dir="sirius_all_summary.tsv"  />
     </outputs>
     <tests>
-        <test>
-            <param name="input" value="historic_input.msp"/>
-            <output name="results" file="historic.tsv"/>
-        </test>
+
         <test>
             <param name="input" value="ML006801.txt"/>
             <output name="results" file="ML006801.tsv"/>
@@ -104,7 +102,7 @@ MSP file created using *Create MSP* tool
 
 The following databases are available:
 
-* PubChem (default)
+* PubChem (
 
 * hmdb
 
