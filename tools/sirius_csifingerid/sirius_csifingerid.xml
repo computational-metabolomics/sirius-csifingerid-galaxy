@@ -1,27 +1,33 @@
-<tool id="sirius_csifingerid" name="SIRIUS-CSI:FingerID" version="0.1.0">
+<tool id="sirius_csifingerid" name="SIRIUS-CSI:FingerID" version="0.2.0">
     <description> </description>
     <requirements>
-        <requirement type="package" version="4.0.0">sirius-csifingerid</requirement>
+        <requirement type="package" version="4.0.1">sirius-csifingerid</requirement>
     </requirements>
     <command detect_errors="exit_code"  interpreter="python">
     <![CDATA[
 
-       #set $tool_directory = $getVar('__tool_directory__', '../../../../tools/sirius_csifingerid')
+
         sirius_csifingerid.py
-            --input "$input"
-            --db_online '$db_online'
+            --input_pth "$input"
+            --database '$database'
             --profile $profile
             --candidates $candidates
             --ppm_max $ppm_max
             --polarity $polarity
-            --results_name 'csi_results.tsv'
             --out_dir .
-            --tool_directory $tool_directory
-            
+            --result_pth sirius_all_summary.tsv
+            --cores_top_level 1
+            --meta_select_col $meta_select_col
+            --minMSMSpeaks $minMSMSpeaks
+            --schema $schema
+            --temp_dir .
+
+
+
     ]]></command>
     <inputs>
-        <param name="input" type="data" format="msp,txt" label="MSP file (Output from Create MSP tool)" argument="--input"/>
-        <param name="db_online" type="select" label="Select SIRIUS-CSI:FingerID Database" argument="--db_online">
+        <param name="input" type="data" format="msp,txt" label="MSP file (Output from Create MSP tool)" argument="--input_pth"/>
+        <param name="database" type="select" label="Select SIRIUS-CSI:FingerID Database" argument="--database">
             <option value="PubChem" >PubChem</option>
             <option selected="true" value="hmdb">HMDB</option>
             <option value="kegg">KEGG</option>
@@ -32,23 +38,45 @@
         <param name="ppm_max" type="integer" value="10" label="Mass deviation of the fragment peaks in ppm" argument="--ppm_max"/>
         <param name="candidates" type="integer" value="5" label="The maximum number of candidates in the output" argument="--candidates"/>
         <param name="polarity" type="select" label="Ion Mode" argument="--polarity">
-            <option value="pos" selected="true">Positive</option>
-            <option value="neg">Negative</option>
+            <option value="positive" selected="true">Positive</option>
+            <option value="negative">Negative</option>
         </param> 
         <param name="profile" type="select" label="Analysis used" argument="--profile">
             <option value="orbitrap" selected="true">Orbitrap</option>
             <option value="qtof">qTOF</option>
             <option value="fticr">FT-ICR</option>
         </param>
+        <param name="schema" type="select" label="Schema"
+               help="The schema used for the MSP file (auto will try automatically determine the schema)">
+            <option value="auto" selected="True">Auto</option>
+            <option value="msp" >Generic MSP</option>
+            <option value="massbank">MassBank</option>
+        </param>
+        <param name="meta_select_col" type="select" label="Choose how additional metadata columns are extracted"
+               help="The SIRIUS-CSI:Fingerid output can have additional meta data columns added, these can be either extracted
+               from all MSP parameters or from the 'Name' and 'RECORD_TITLE' MSP parameter. Additionally, columns
+               can be added from the 'Name' or 'RECORD_TITLE' parameter by splitting on | and :
+               e.g. 'MZ:100.2 | RT:20 | xcms_grp_id:1' would create MZ,RT and xcms_grp_id columns">
+            <option value="name" selected="true">Extra metadata columns from the Name or RECORD_TITLE</option>
+            <option value="name_split" >Extra metadata columns from the Name or RECORD_TITLE (each column is split on "|" and ":" ) </option>
+            <option value="all">Extra metadata columns from all MSP parameters</option>
+        </param>
+        <param name="minMSMSpeaks" type="integer" label="Minimum number of MS/MS peaks" value="0"/>
     </inputs>
     <outputs>
-        <data name="results" format="tsv" label="${tool.name} results of ${input.name}" from_work_dir="csi_results.tsv"  />
+        <data name="results" format="tsv" label="${tool.name} results of ${input.name}" from_work_dir="sirius_all_summary.tsv"  />
     </outputs>
     <tests>
+
         <test>
-            <param name="input" value="input.msp"/>
-            <output name="results" file="sirus_csifingerid.tabular"/>
+            <param name="input" value="ML006801.txt"/>
+            <output name="results" file="ML006801.tsv"/>
         </test>
+        <test>
+            <param name="input" value="generic.msp"/>
+            <output name="results" file="generic.tsv"/>
+        </test>
+
     </tests>
     <help>
 ----------------
@@ -74,7 +102,7 @@ MSP file created using *Create MSP* tool
 
 The following databases are available:
 
-* PubChem (default)
+* PubChem (
 
 * hmdb
 
@@ -113,6 +141,7 @@ Developers and contributors
 ---------------------------
 
 - **Jordi Capellades (j.capellades.to@gmail.com) - Universitat Rovira i Virgili (SP)**
+- **Thomas N Lawson (t.n.lawson@bham.ac.uk) - University of Birmingham (UK)**
 - **Ralf Weber (r.j.weber@bham.ac.uk) - University of Birmingham (UK)**
 
     </help>
