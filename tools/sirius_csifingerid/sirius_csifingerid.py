@@ -48,20 +48,21 @@ else:
 ######################################################################
 # Setup parameter dictionary
 ######################################################################
-paramd = defaultdict()
-paramd["cli"] = {}
-paramd["cli"]["--database"] = args.database
-paramd["cli"]["--profile"] = args.profile
-paramd["cli"]["--candidates"] = args.candidates
-paramd["cli"]["--ppm-max"] = args.ppm_max
-if args.polarity == 'positive':
-    paramd["default_ion"] = "[M+H]+"
-elif args.polarity == 'negative':
-    paramd["default_ion"] = "[M-H]-"
-else:
-    paramd["default_ion"] = ''
+def init_paramd():
+    paramd = defaultdict()
+    paramd["cli"] = {}
+    paramd["cli"]["--database"] = args.database
+    paramd["cli"]["--profile"] = args.profile
+    paramd["cli"]["--candidates"] = args.candidates
+    paramd["cli"]["--ppm-max"] = args.ppm_max
+    if args.polarity == 'positive':
+        paramd["default_ion"] = "[M+H]+"
+    elif args.polarity == 'negative':
+        paramd["default_ion"] = "[M-H]-"
+    else:
+        paramd["default_ion"] = ''
 
-print(paramd)
+    return paramd
 
 
 ######################################################################
@@ -150,8 +151,8 @@ with open(args.input_pth, "r") as infile:
             if ('massbank' in meta_info and 'cols' in meta_info) or ('msp' in meta_info and 'num_peaks' in meta_info):
 
                 numlines = int(meta_info['num_peaks'])
-                linesread = 0
                 peaklist = []
+                linesread = 0
 
         elif linesread < numlines:
             # =============== Extract peaks from MSP ==========================
@@ -159,6 +160,7 @@ with open(args.input_pth, "r") as infile:
             # Keep only m/z and intensity, not relative intensity
             save_line = tuple(line[0].split() + line[1].split())
             linesread += 1
+
             peaklist.append(save_line)
 
         elif linesread == numlines:
@@ -167,6 +169,7 @@ with open(args.input_pth, "r") as infile:
             #rd = str(uuid.uuid4())
             spectrac += 1
 
+            paramd = init_paramd()
 
             # Get sample details (if possible to extract) e.g. if created as part of the msPurity pipeline)
             # choose between getting additional details to add as columns as either all meta data from msp, just
@@ -193,7 +196,7 @@ with open(args.input_pth, "r") as infile:
             # =============== Output peaks to txt file  ==============================
             numlines = 0
             paramd["cli"]["--ms2"] = os.path.join(wd, "{}_tmpspec.txt".format(spectrac))
-            print(paramd["cli"]["--ms2"])
+
             # write spec file
             with open(paramd["cli"]["--ms2"], 'w') as outfile:
                 for p in peaklist:
@@ -218,6 +221,7 @@ with open(args.input_pth, "r") as infile:
                     cmd += " {} {}".format(str(k), str(v))
             paramds[paramd["SampleName"]] = paramd
 
+
             # =============== Run metfrag ==============================================
             # Filter before process with a minimum number of MS/MS peaks
             if linesread >= float(args.minMSMSpeaks):
@@ -229,6 +233,7 @@ with open(args.input_pth, "r") as infile:
                     os.system(cmd)
 
             meta_info = {}
+            numlines = 0
 
 def work(cmds):
     return [os.system(cmd) for cmd in cmds]
@@ -270,7 +275,7 @@ with open(args.result_pth, 'a') as merged_outfile:
         quoting=csv.QUOTE_NONNUMERIC,)
     dwriter.writeheader()
 
-    for fn in outfiles:
+    for fn in sorted(outfiles):
         print(fn)
 
         with open(fn) as infile:

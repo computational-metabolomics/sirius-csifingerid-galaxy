@@ -35,6 +35,9 @@ Developers & Contributors
 
 Changes
 -------
+Version 0.2.1:
+ - Fixed bug where ID was not being updated
+
 Version 0.2.0:
  - Update to handle multiple types of MSP files
  - Autohandling of adducts (if in MSP file)
