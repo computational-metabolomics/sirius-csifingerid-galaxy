@@ -220,11 +220,10 @@ with open(args.input_pth, "r") as infile:
     plinesread = 0
     for line in infile:
 
-        print(meta_info)
         line = line.strip()
 
         if pnumlines == 0:
-            print(line, 1)
+
             # =============== Extract metadata from MSP ========================
             meta_info = parse_meta(meta_regex, meta_info)
 
@@ -235,7 +234,6 @@ with open(args.input_pth, "r") as infile:
                 plinesread = 0
 
         elif plinesread < pnumlines:
-            print(line, 2)
             # =============== Extract peaks from MSP ==========================
             line = tuple(line.split())  # .split() will split on any empty space (i.e. tab and space)
             # Keep only m/z and intensity, not relative intensity
@@ -245,7 +243,6 @@ with open(args.input_pth, "r") as infile:
             peaklist.append(save_line)
 
         elif plinesread and plinesread == pnumlines:
-            print(line, 3)
             # =============== Get sample name and additional details for output =======
             spectrac += 1
             paramd, cmd = run_sirius(meta_info, peaklist, args, wd, spectrac)
@@ -261,7 +258,6 @@ with open(args.input_pth, "r") as infile:
 
 
     if plinesread and plinesread == pnumlines:
-        print(meta_info)
         paramd, cmd = run_sirius(meta_info, peaklist, args, wd, spectrac + 1)
 
         paramds[paramd["SampleName"]] = paramd
