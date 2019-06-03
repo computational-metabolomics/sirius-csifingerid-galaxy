@@ -12,7 +12,7 @@ Source code: https://github.com/boecker-lab/sirius
 Version
 ------
 
-0.2.0 Galaxy tool (using `SIRIUS-CSI:FingerID v4.0.1 <https://bio.informatik.uni-jena.de/repository/dist-release-local/de/unijena/bioinf/ms/sirius/4.0.1/sirius-4.0.1-linux64-headless.zip>`_)  
+0.2.2 Galaxy tool (using `SIRIUS-CSI:FingerID v4.0.1 <https://bio.informatik.uni-jena.de/repository/dist-release-local/de/unijena/bioinf/ms/sirius/4.0.1/sirius-4.0.1-linux64-headless.zip>`_)
 
 Galaxy
 ------
@@ -35,6 +35,9 @@ Developers & Contributors
 
 Changes
 -------
+Version 0.2.2:
+ - Bug Fix for skipping final MSP spectra if two empty lines not present
+
 Version 0.2.1:
  - Fixed bug where ID was not being updated
 
