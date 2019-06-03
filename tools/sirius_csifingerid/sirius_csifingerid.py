@@ -39,31 +39,10 @@ if args.temp_dir:
 
     if not os.path.exists(wd):
         os.mkdir(wd)
-
 else:
     td = tempfile.mkdtemp()
     wd = os.path.join(td, str(uuid.uuid4()))
     os.mkdir(wd)
-
-######################################################################
-# Setup parameter dictionary
-######################################################################
-def init_paramd():
-    paramd = defaultdict()
-    paramd["cli"] = {}
-    paramd["cli"]["--database"] = args.database
-    paramd["cli"]["--profile"] = args.profile
-    paramd["cli"]["--candidates"] = args.candidates
-    paramd["cli"]["--ppm-max"] = args.ppm_max
-    if args.polarity == 'positive':
-        paramd["default_ion"] = "[M+H]+"
-    elif args.polarity == 'negative':
-        paramd["default_ion"] = "[M-H]-"
-    else:
-        paramd["default_ion"] = ''
-
-    return paramd
-
 
 ######################################################################
 # Setup regular expressions for MSP parsing dictionary
@@ -132,6 +111,101 @@ adduct_types = {
     '[M+Cl]-': 34.969402,
 }
 
+
+######################################################################
+# Setup parameter dictionary
+######################################################################
+def init_paramd(args):
+    paramd = defaultdict()
+    paramd["cli"] = {}
+    paramd["cli"]["--database"] = args.database
+    paramd["cli"]["--profile"] = args.profile
+    paramd["cli"]["--candidates"] = args.candidates
+    paramd["cli"]["--ppm-max"] = args.ppm_max
+    if args.polarity == 'positive':
+        paramd["default_ion"] = "[M+H]+"
+    elif args.polarity == 'negative':
+        paramd["default_ion"] = "[M-H]-"
+    else:
+        paramd["default_ion"] = ''
+
+    return paramd
+
+
+
+######################################################################
+# Function to run sirius when all meta and spectra is obtained
+######################################################################
+def run_sirius(meta_info, peaklist, args, wd, spectrac):
+    # Get sample details (if possible to extract) e.g. if created as part of the msPurity pipeline)
+    # choose between getting additional details to add as columns as either all meta data from msp, just
+    # details from the record name (i.e. when using msPurity and we have the columns coded into the name) or
+    # just the spectra index (spectrac)
+
+    paramd = init_paramd(args)
+
+    if args.meta_select_col == 'name':
+        # have additional column of just the name
+        paramd['additional_details'] = {'name': meta_info['name']}
+    elif args.meta_select_col == 'name_split':
+        # have additional columns split by "|" and then on ":" e.g. MZ:100.2 | RT:20 | xcms_grp_id:1
+        paramd['additional_details'] = {sm.split(":")[0].strip(): sm.split(":")[1].strip() for sm in
+                                        meta_info['name'].split("|")}
+    elif args.meta_select_col == 'all':
+        # have additional columns based on all the meta information extracted from the MSP
+        paramd['additional_details'] = meta_info
+    else:
+        # Just have and index of the spectra in the MSP file
+        paramd['additional_details'] = {'spectra_idx': spectrac}
+
+    paramd["SampleName"] = "{}_sirius_result".format(spectrac)
+
+    paramd["cli"]["--output"] = os.path.join(wd, "{}_sirius_result".format(spectrac))
+
+    # =============== Output peaks to txt file  ==============================
+    numlines = 0
+    paramd["cli"]["--ms2"] = os.path.join(wd, "{}_tmpspec.txt".format(spectrac))
+
+    # write spec file
+    with open(paramd["cli"]["--ms2"], 'w') as outfile:
+        for p in peaklist:
+            outfile.write(p[0] + "\t" + p[1] + "\n")
+
+    # =============== Update param based on MSP metadata ======================
+    # Replace param details with details from MSP if required
+    if 'precursor_type' in meta_info and meta_info['precursor_type']:
+        paramd["cli"]["--ion"] = meta_info['precursor_type']
+    else:
+        if paramd["default_ion"]:
+            paramd["cli"]["--ion"] = paramd["default_ion"]
+        else:
+            paramd["cli"]["--auto-charge"] = ''
+
+    if 'precursor_mz' in meta_info and meta_info['precursor_mz']:
+        paramd["cli"]["--precursor"] = meta_info['precursor_mz']
+
+    # =============== Create CLI cmd for metfrag ===============================
+    cmd = "sirius --fingerid"
+    for k, v in six.iteritems(paramd["cli"]):
+        cmd += " {} {}".format(str(k), str(v))
+    paramds[paramd["SampleName"]] = paramd
+
+    # =============== Run srius ==============================================
+    # Filter before process with a minimum number of MS/MS peaks
+    if plinesread >= float(args.minMSMSpeaks):
+
+        if int(args.cores_top_level) == 1:
+            os.system(cmd)
+
+    return paramd, cmd
+
+def work(cmds):
+    return [os.system(cmd) for cmd in cmds]
+
+
+######################################################################
+# Parse MSP file and run SIRIUS CLI
+######################################################################
 # keep list of commands if performing in CLI in parallel
 cmds = []
 # keep a dictionary of all params
@@ -140,104 +214,58 @@ paramds = {}
 spectrac = 0
 
 with open(args.input_pth, "r") as infile:
-    numlines = 0
+    # number of lines for the peaks
+    pnumlines = 0
+    # number of lines read for the peaks
+    plinesread = 0
     for line in infile:
+
+        print(meta_info)
         line = line.strip()
 
-        if numlines == 0:
+        if pnumlines == 0:
+            print(line, 1)
             # =============== Extract metadata from MSP ========================
             meta_info = parse_meta(meta_regex, meta_info)
 
             if ('massbank' in meta_info and 'cols' in meta_info) or ('msp' in meta_info and 'num_peaks' in meta_info):
 
-                numlines = int(meta_info['num_peaks'])
+                pnumlines = int(meta_info['num_peaks'])
                 peaklist = []
-                linesread = 0
+                plinesread = 0
 
-        elif linesread < numlines:
+        elif plinesread < pnumlines:
+            print(line, 2)
             # =============== Extract peaks from MSP ==========================
             line = tuple(line.split())  # .split() will split on any empty space (i.e. tab and space)
             # Keep only m/z and intensity, not relative intensity
             save_line = tuple(line[0].split() + line[1].split())
-            linesread += 1
+            plinesread += 1
 
             peaklist.append(save_line)
 
-        elif linesread == numlines:
+        elif plinesread and plinesread == pnumlines:
+            print(line, 3)
             # =============== Get sample name and additional details for output =======
-            # use a unique uuid4 to keep track of processing (important for multicore)
-            #rd = str(uuid.uuid4())
             spectrac += 1
+            paramd, cmd = run_sirius(meta_info, peaklist, args, wd, spectrac)
 
-            paramd = init_paramd()
-
-            # Get sample details (if possible to extract) e.g. if created as part of the msPurity pipeline)
-            # choose between getting additional details to add as columns as either all meta data from msp, just
-            # details from the record name (i.e. when using msPurity and we have the columns coded into the name) or
-            # just the spectra index (spectrac)
-            if args.meta_select_col == 'name':
-                # have additional column of just the name
-                paramd['additional_details'] = {'name': meta_info['name']}
-            elif args.meta_select_col == 'name_split':
-                # have additional columns split by "|" and then on ":" e.g. MZ:100.2 | RT:20 | xcms_grp_id:1
-                paramd['additional_details'] = {sm.split(":")[0].strip(): sm.split(":")[1].strip() for sm in
-                               meta_info['name'].split("|")}
-            elif args.meta_select_col == 'all':
-                # have additional columns based on all the meta information extracted from the MSP
-                paramd['additional_details'] = meta_info
-            else:
-                # Just have and index of the spectra in the MSP file
-                paramd['additional_details'] = {'spectra_idx': spectrac}
-
-            paramd["SampleName"] = "{}_sirius_result".format(spectrac)
-
-            paramd["cli"]["--output"] = os.path.join(wd, "{}_sirius_result".format(spectrac))
-
-            # =============== Output peaks to txt file  ==============================
-            numlines = 0
-            paramd["cli"]["--ms2"] = os.path.join(wd, "{}_tmpspec.txt".format(spectrac))
-
-            # write spec file
-            with open(paramd["cli"]["--ms2"], 'w') as outfile:
-                for p in peaklist:
-                    outfile.write(p[0] + "\t" + p[1] + "\n")
-
-            # =============== Update param based on MSP metadata ======================
-            # Replace param details with details from MSP if required
-            if 'precursor_type' in meta_info and meta_info['precursor_type']:
-                paramd["cli"]["--ion"] = meta_info['precursor_type']
-            else:
-                if paramd["default_ion"]:
-                    paramd["cli"]["--ion"] = paramd["default_ion"]
-                else:
-                    paramd["cli"]["--auto-charge"] = ''
-
-            if 'precursor_mz' in meta_info and meta_info['precursor_mz']:
-                paramd["cli"]["--precursor"] = meta_info['precursor_mz']
-
-            # =============== Create CLI cmd for metfrag ===============================
-            cmd = "sirius --fingerid"
-            for k, v in six.iteritems(paramd["cli"]):
-                    cmd += " {} {}".format(str(k), str(v))
             paramds[paramd["SampleName"]] = paramd
-
-
-            # =============== Run metfrag ==============================================
-            # Filter before process with a minimum number of MS/MS peaks
-            if linesread >= float(args.minMSMSpeaks):
-
-                if int(args.cores_top_level) > 1:
-                    cmds.append(cmd)
-                else:
-                    print(cmd)
-                    os.system(cmd)
+            cmds.append(cmd)
 
             meta_info = {}
-            numlines = 0
+            pnumlines = 0
+            plinesread = 0
 
-def work(cmds):
-    return [os.system(cmd) for cmd in cmds]
+            # end of file. Check if there is a MSP spectra to run metfrag on still
 
+
+    if plinesread and plinesread == pnumlines:
+        print(meta_info)
+        paramd, cmd = run_sirius(meta_info, peaklist, args, wd, spectrac + 1)
+
+        paramds[paramd["SampleName"]] = paramd
+        cmds.append(cmd)
 
 # Perform multiprocessing on command line call level
 if int(args.cores_top_level) > 1:
@@ -254,6 +282,8 @@ if int(args.cores_top_level) > 1:
 # outfiles = [os.path.join(wd, f) for f in glob.glob(os.path.join(wd, "*_metfrag_result.csv"))]
 outfiles = glob.glob(os.path.join(wd, '*', 'summary_csi_fingerid.csv'))
 
+# sort files nicely
+outfiles.sort(key = lambda s: int(re.match('^.*/(\d+).*/summary_csi_fingerid.csv', s).group(1)))
 print(outfiles)
 
 headers = []
