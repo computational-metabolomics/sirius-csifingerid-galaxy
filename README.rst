@@ -35,6 +35,9 @@ Developers & Contributors
 
 Changes
 -------
+Version 0.2.3:
+ - Removed quotes "" for values in output table
+
 Version 0.2.2:
  - Bug Fix for skipping final MSP spectra if two empty lines not present
 
