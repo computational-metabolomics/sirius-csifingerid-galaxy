@@ -297,8 +297,7 @@ headers = list(paramd['additional_details'].keys()) + headers
 
 
 with open(args.result_pth, 'a') as merged_outfile:
-    dwriter = csv.DictWriter(merged_outfile, fieldnames=headers, delimiter='\t', quotechar='"',
-        quoting=csv.QUOTE_NONNUMERIC,)
+    dwriter = csv.DictWriter(merged_outfile, fieldnames=headers, delimiter='\t')
     dwriter.writeheader()
 
     for fn in sorted(outfiles):
