@@ -276,10 +276,10 @@ if int(args.cores_top_level) > 1:
 ######################################################################
 # outputs might have different headers. Need to get a list of all the headers before we start merging the files
 # outfiles = [os.path.join(wd, f) for f in glob.glob(os.path.join(wd, "*_metfrag_result.csv"))]
-outfiles = glob.glob(os.path.join(wd, '*', 'summary_csi_fingerid.csv'))
+outfiles = glob.glob(os.path.join(wd, '*', '*', 'summary_csi_fingerid.csv'))
 
 # sort files nicely
-outfiles.sort(key = lambda s: int(re.match('^.*/(\d+).*/summary_csi_fingerid.csv', s).group(1)))
+outfiles.sort(key = lambda s: int(re.match('^.*/(\d+).*/.*/summary_csi_fingerid.csv', s).group(1)))
 print(outfiles)
 
 headers = []
@@ -306,7 +306,7 @@ with open(args.result_pth, 'a') as merged_outfile:
         with open(fn) as infile:
             reader = csv.DictReader(infile, delimiter='\t')
 
-            ad = paramds[fn.split(os.sep)[-2]]['additional_details']
+            ad = paramds[fn.split(os.sep)[-3]]['additional_details']
 
             for line in reader:
 
