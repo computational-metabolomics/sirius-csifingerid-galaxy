@@ -31,7 +31,8 @@ parser.add_argument('--minMSMSpeaks', default=1)
 parser.add_argument('--schema', default='msp')
 args = parser.parse_args()
 print(args)
-
+if os.stat(args.input_pth).st_size == 0:
+    exit('Input file empty')
 
 if args.temp_dir:
     wd = os.path.join(args.temp_dir, 'temp')
@@ -96,20 +97,6 @@ def parse_meta(meta_regex, meta_info={}):
             if m:
                 meta_info[k] = '-'.join(m.groups()).strip()
     return meta_info
-
-
-adduct_types = {
-    '[M+H]+': 1.007276,
-    '[M+NH4]+': 18.034374,
-    '[M+Na]+': 22.989218,
-    '[M+K]+': 38.963158,
-    '[M+CH3OH+H]+': 33.033489,
-    '[M+ACN+H]+': 42.033823,
-    '[M+ACN+Na]+': 64.015765,
-    '[M+2ACN+H]+': 83.06037,
-    '[M-H]-': -1.007276,
-    '[M+Cl]-': 34.969402,
-}
 
 
 ######################################################################

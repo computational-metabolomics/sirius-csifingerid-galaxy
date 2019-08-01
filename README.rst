@@ -12,7 +12,8 @@ Source code: https://github.com/boecker-lab/sirius
 Version
 ------
 
-0.2.2 Galaxy tool (using `SIRIUS-CSI:FingerID v4.0.1 <https://bio.informatik.uni-jena.de/repository/dist-release-local/de/unijena/bioinf/ms/sirius/4.0.1/sirius-4.0.1-linux64-headless.zip>`_)
+v4.0.1+Galaxy0.2.4
+(sing `SIRIUS-CSI:FingerID v4.0.1 <https://bio.informatik.uni-jena.de/repository/dist-release-local/de/unijena/bioinf/ms/sirius/4.0.1/sirius-4.0.1-linux64-headless.zip>`_)
 
 Galaxy
 ------
@@ -35,6 +36,10 @@ Developers & Contributors
 
 Changes
 -------
+Version v4.0.1+Galaxy0.2.4:
+ - Check for empty input file added
+ - Added Glucose unit-test
+
 Version 0.2.3:
  - Removed quotes "" for values in output table
 
