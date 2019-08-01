@@ -69,12 +69,32 @@
     <tests>
 
         <test>
+            <!-- Test "massbank" style data format  -->
             <param name="input" value="ML006801.txt"/>
             <output name="results" file="ML006801.tsv"/>
         </test>
         <test>
+            <!-- Test "generic format" style data format  -->
             <param name="input" value="generic.msp"/>
             <output name="results" file="generic.tsv"/>
+        </test>
+        <test>
+            <!-- Test for glucose (qtof) MassBank data format  -->
+            <param name="input" value="RP022611.txt"/>
+            <param name="profile" value="qtof"/>
+            <output name="results" file="RP022611_result.tsv"/>
+        </test>
+        <test>
+            <!-- Test for glucose (q-exactive) GNPS, MoNA data format  -->
+            <param name="input" value="CCMSLIB00000578155.msp"/>
+            <param name="profile" value="orbitrap"/>
+            <output name="results" file="CCMSLIB00000578155_result.tsv"/>
+        </test>
+
+        <test>
+            <!-- Test invalid adduct  -->
+            <param name="input" value="invalid_adduct.msp"/>
+            <output name="results" file="invalid_adduct_result.tsv"/>
         </test>
 
     </tests>
