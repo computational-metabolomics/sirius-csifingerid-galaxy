@@ -46,10 +46,10 @@ v4.0.1+Galaxy0.2.4:
 v0.2.3:
  - Removed quotes "" for values in output table
 
-b0.2.2:
+v0.2.2:
  - Bug Fix for skipping final MSP spectra if two empty lines not present
 
-b0.2.1:
+v0.2.1:
  - Fixed bug where ID was not being updated
 
 v0.2.0:
