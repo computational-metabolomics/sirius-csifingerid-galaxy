@@ -36,6 +36,9 @@ Developers & Contributors
 
 Changes
 -------
+v4.0.1+Galaxy0.2.6:
+ - More updates for check empty results
+
 v4.0.1+Galaxy0.2.5:
  - Updated check for empty results
 
