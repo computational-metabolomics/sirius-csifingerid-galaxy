@@ -269,6 +269,10 @@ outfiles = glob.glob(os.path.join(wd, '*', '*', 'summary_csi_fingerid.csv'))
 outfiles.sort(key = lambda s: int(re.match('^.*/(\d+).*/.*/summary_csi_fingerid.csv', s).group(1)))
 print(outfiles)
 
+if len(outfiles) == 0:
+    print('No results')
+    sys.exit()
+
 headers = []
 c = 0
 for fn in outfiles:
