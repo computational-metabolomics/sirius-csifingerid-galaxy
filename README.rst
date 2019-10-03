@@ -12,7 +12,7 @@ Source code: https://github.com/boecker-lab/sirius
 Version
 ------
 
-v4.0.1+Galaxy0.2.5
+v4.0.1+Galaxy1
 (Using `SIRIUS-CSI:FingerID v4.0.1 <https://bio.informatik.uni-jena.de/repository/dist-release-local/de/unijena/bioinf/ms/sirius/4.0.1/sirius-4.0.1-linux64-headless.zip>`_)
 
 Galaxy
@@ -36,6 +36,9 @@ Developers & Contributors
 
 Changes
 -------
+v4.0.1+Galaxy1:
+ - IUC updates
+
 v4.0.1+Galaxy0.2.6:
  - More updates for check empty results
 
