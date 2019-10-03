@@ -22,9 +22,7 @@ Galaxy
 Installation note
 ------
 
-The SIRIUS-CSI:FingerID CLI used for the Galaxy wrapper  is not available currently in Bioconda but is accessible used the channel `tomnl <https://anaconda.org/tomnl/sirius-csifingeridx>`_, the Galaxy tool is currently using `SIRIUS-CSI:FingerID v4.0.1 <https://bio.informatik.uni-jena.de/repository/dist-release-local/de/unijena/bioinf/ms/sirius/4.0.1/sirius-4.0.1-linux64-headless.zip>`_).
-
-The conda channel "tomnl" needs to be available as a channel for Galaxy or Planemo, e.g. for planemo the following command is requried "--conda_ensure_channels tomnl,iuc,bioconda,conda-forge,defaults".
+The SIRIUS-CSI:FingerID CLI used for the Galaxy wrapper is available in Conda via the Bioconda channel. 
 
 
 Developers & Contributors
