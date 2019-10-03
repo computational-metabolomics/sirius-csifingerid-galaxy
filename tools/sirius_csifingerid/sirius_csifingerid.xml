@@ -3,10 +3,10 @@
     <requirements>
         <requirement type="package" version="4.0.1">sirius-csifingerid</requirement>
     </requirements>
-    <command detect_errors="exit_code" interpreter="python">
+    <command detect_errors="exit_code">
     <![CDATA[
 
-        sirius_csifingerid.py
+        python '$__tool_directory__/sirius_csifingerid.py'
             --input_pth '$input'
             --database $database
             --profile $profile
