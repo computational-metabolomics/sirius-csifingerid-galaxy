@@ -1,13 +1,16 @@
-<tool id="sirius_csifingerid" name="SIRIUS-CSI:FingerID" version="4.0.1+galaxy1">
-    <description>is used to identify metabolites using single and tandem mass spectrometry</description>
+<tool id="sirius_csifingerid" name="SIRIUS-CSI:FingerID"
+      version="4.0.1+galaxy1">
+    <description>is used to identify metabolites using single and
+        tandem mass spectrometry</description>
     <requirements>
-        <requirement type="package" version="4.0.1">sirius-csifingerid</requirement>
+        <requirement type="package" version="4.0.1">
+            sirius-csifingerid</requirement>
     </requirements>
     <command detect_errors="exit_code">
     <![CDATA[
 
         python '$__tool_directory__/sirius_csifingerid.py'
-            --input_pth '$input_pth'
+            --input_pth '$input'
             --database $database
             --profile $profile
             --candidates $candidates
@@ -23,8 +26,10 @@
 
     ]]></command>
     <inputs>
-        <param argument="--input_pth" type="data" format="msp" label="MSP file (output from Create MSP tool)" />
-        <param argument="--database" type="select" label="Select SIRIUS-CSI:FingerID Database" >
+        <param name="input" argument="--input_pth" type="data" format="msp"
+               label="MSP file (output from Create MSP tool)" />
+        <param argument="--database" type="select"
+               label="Select SIRIUS-CSI:FingerID Database" >
             <option value="PubChem" >PubChem</option>
             <option selected="true" value="hmdb">HMDB</option>
             <option value="kegg">KEGG</option>
@@ -32,8 +37,10 @@
             <option value="biocyc">BioCyc</option>
             <option  value="all">All (see help)</option>
         </param>
-        <param argument="--ppm_max" type="integer" value="10" min="0" label="Mass deviation of the fragment peaks in ppm" />
-        <param argument="--candidates" type="integer" value="5" min="1" label="Maximum number of candidates in the output" />
+        <param argument="--ppm_max" type="integer" value="10" min="0"
+               label="Mass deviation of the fragment peaks in ppm" />
+        <param argument="--candidates" type="integer" value="5" min="1"
+               label="Maximum number of candidates in the output" />
         <param argument="--polarity" type="select" label="Ion mode" >
             <option value="positive" selected="true">Positive</option>
             <option value="negative">Negative</option>
@@ -44,51 +51,62 @@
             <option value="fticr">FT-ICR</option>
         </param>
         <param argument="--schema" type="select" label="Schema"
-               help="Schema used for the MSP file (auto will try to determine the schema automatically)">
+               help="Schema used for the MSP file (auto will try to
+                     determine the schema automatically)">
             <option value="auto" selected="True">Auto</option>
             <option value="msp" >Generic MSP</option>
             <option value="massbank">MassBank</option>
         </param>
-        <param argument="--meta_select_col" type="select" label="Choose how additional metadata columns are extracted"
-               help="The SIRIUS-CSI:Fingerid output can have additional metadata columns added; these can be either extracted
-               from all MSP parameters or from the 'Name' and 'RECORD_TITLE' MSP parameters. Additionally, columns
-               can be added from the 'Name' or 'RECORD_TITLE' parameters by splitting on | and :
-               e.g. 'MZ:100.2 | RT:20 | xcms_grp_id:1' would create MZ,RT and xcms_grp_id columns">
-            <option value="name" selected="true">Extra metadata columns from the Name or RECORD_TITLE</option>
-            <option value="name_split" >Extra metadata columns from the Name or RECORD_TITLE (each column is split on "|" and ":" ) </option>
-            <option value="all">Extra metadata columns from all MSP parameters</option>
+        <param argument="--meta_select_col" type="select"
+               label="Choose how additional metadata columns are extracted"
+               help="The SIRIUS-CSI:Fingerid output can have additional
+               metadata columns added; these can be either extracted from all
+               MSP parameters or from the 'Name' and 'RECORD_TITLE' MSP
+               parameters. Additionally, columns can be added from the 'Name'
+               or 'RECORD_TITLE' parameters by splitting on | and :  e.g.
+               'MZ:100.2 | RT:20 | xcms_grp_id:1' would create MZ,RT and
+               xcms_grp_id columns">
+            <option value="name" selected="true">
+                Extra metadata columns from the Name or RECORD_TITLE</option>
+            <option value="name_split" >
+                Extra metadata columns from the Name or
+                RECORD_TITLE (each column is split on "|" and ":" ) </option>
+            <option value="all">
+                Extra metadata columns from all MSP parameters</option>
         </param>
-        <param argument="--minMSMSpeaks" type="integer" label="Minimum number of MS/MS peaks"  min="0" value="0"/>
+        <param argument="--minMSMSpeaks" type="integer" min="0" value="0"
+               label="Minimum number of MS/MS peaks"/>
     </inputs>
     <outputs>
-        <data name="results" format="tsv" from_work_dir="sirius_all_summary.tsv"  />
+        <data name="results" format="tsv"
+              from_work_dir="sirius_all_summary.tsv"/>
     </outputs>
     <tests>
         <test>
             <!-- Test "massbank" style data format  -->
-            <param name="input" value="ML006801.txt"/>
+            <param name="input" value="ML006801.txt"  ftype="msp"/>
             <output name="results" file="ML006801.tsv"/>
         </test>
         <test>
             <!-- Test "generic format" style data format  -->
-            <param name="input" value="generic.msp"/>
+            <param name="input" value="generic.msp" ftype="msp"/>
             <output name="results" file="generic.tsv"/>
         </test>
         <test>
             <!-- Test for glucose (qtof) MassBank data format  -->
-            <param name="input" value="RP022611.txt"/>
+            <param name="input" value="RP022611.txt" ftype="msp"/>
             <param name="profile" value="qtof"/>
             <output name="results" file="RP022611_result.tsv"/>
         </test>
         <test>
             <!-- Test for glucose (q-exactive) GNPS, MoNA data format  -->
-            <param name="input" value="CCMSLIB00000578155.msp"/>
+            <param name="input" value="CCMSLIB00000578155.msp" ftype="msp"/>
             <param name="profile" value="orbitrap"/>
             <output name="results" file="CCMSLIB00000578155_result.tsv"/>
         </test>
         <test>
             <!-- Test invalid adduct  -->
-            <param name="input" value="invalid_adduct.msp"/>
+            <param name="input" value="invalid_adduct.msp" ftype="msp"/>
             <output name="results" file="invalid_adduct_result.tsv"/>
         </test>
     </tests>
@@ -100,9 +118,12 @@ SIRIUS-FingerID
 Description
 -----------
 
-| SIRIUS is a java-based software framework for discovering a landscape of de-novo identification of metabolites using single and tandem mass spectrometry.
-| SIRIUS uses isotope pattern analysis for detecting the molecular formula and further analyses the fragmentation pattern of a compound using fragmentation trees.
-| Website: https://bio.informatik.uni-jena.de/software/sirius/
+| SIRIUS is a java-based software framework for discovering a landscape of
+| de-novo identification of metabolites using single and tandem mass
+| spectrometry. SIRIUS uses isotope pattern analysis for detecting the
+| molecular formula and further analyses the fragmentation pattern of a
+| compound using fragmentation trees. Website:
+| https://bio.informatik.uni-jena.de/software/sirius/
 |
 
 Parameters
@@ -150,7 +171,11 @@ Set the top X candidates to return.
 
 * FT-ICR
 
-If you want to analyze spectra measured with Orbitrap or FT-ICR, you should specify the appropriate analysis profile. A profile is a set of configuration options and scoring functions SIRIUS 3 will use for its analysis. For example, the Orbitrap and FT-ICR profiles have tighter constraints for the allowed mass deviation but do not rely so much on the intensity of isotope peaks.
+If you want to analyze spectra measured with Orbitrap or FT-ICR, you should
+specify the appropriate analysis profile. A profile is a set of configuration
+options and scoring functions SIRIUS 3 will use for its analysis. For example,
+the Orbitrap and FT-ICR profiles have tighter constraints for the allowed mass
+deviation but do not rely so much on the intensity of isotope peaks.
 
 
 Developers and contributors
