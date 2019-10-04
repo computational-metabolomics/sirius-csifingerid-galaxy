@@ -7,7 +7,7 @@
     <![CDATA[
 
         python '$__tool_directory__/sirius_csifingerid.py'
-            --input_pth '$input'
+            --input_pth '$input_pth'
             --database $database
             --profile $profile
             --candidates $candidates
@@ -21,11 +21,10 @@
             --schema $schema
             --temp_dir .
 
-
     ]]></command>
     <inputs>
-        <param name="input" type="data" format="msp,txt" label="MSP file (output from Create MSP tool)" argument="--input_pth"/>
-        <param name="database" type="select" label="Select SIRIUS-CSI:FingerID Database" argument="--database">
+        <param argument="--input_pth" type="data" format="msp" label="MSP file (output from Create MSP tool)" />
+        <param argument="--database" type="select" label="Select SIRIUS-CSI:FingerID Database" >
             <option value="PubChem" >PubChem</option>
             <option selected="true" value="hmdb">HMDB</option>
             <option value="kegg">KEGG</option>
@@ -33,24 +32,24 @@
             <option value="biocyc">BioCyc</option>
             <option  value="all">All (see help)</option>
         </param>
-        <param name="ppm_max" type="integer" value="10" min="0" label="Mass deviation of the fragment peaks in ppm" argument="--ppm_max"/>
-        <param name="candidates" type="integer" value="5" min="1" label="Maximum number of candidates in the output" argument="--candidates"/>
-        <param name="polarity" type="select" label="Ion mode" argument="--polarity">
+        <param argument="--ppm_max" type="integer" value="10" min="0" label="Mass deviation of the fragment peaks in ppm" />
+        <param argument="--candidates" type="integer" value="5" min="1" label="Maximum number of candidates in the output" />
+        <param argument="--polarity" type="select" label="Ion mode" >
             <option value="positive" selected="true">Positive</option>
             <option value="negative">Negative</option>
         </param> 
-        <param name="profile" type="select" label="Analysis used" argument="--profile">
+        <param argument="--profile" type="select" label="Analysis used" >
             <option value="orbitrap" selected="true">Orbitrap</option>
             <option value="qtof">qTOF</option>
             <option value="fticr">FT-ICR</option>
         </param>
-        <param name="schema" type="select" label="Schema" argument="--schema"
+        <param argument="--schema" type="select" label="Schema"
                help="Schema used for the MSP file (auto will try to determine the schema automatically)">
             <option value="auto" selected="True">Auto</option>
             <option value="msp" >Generic MSP</option>
             <option value="massbank">MassBank</option>
         </param>
-        <param name="meta_select_col" type="select" label="Choose how additional metadata columns are extracted" argument="--meta_select_col"
+        <param argument="--meta_select_col" type="select" label="Choose how additional metadata columns are extracted"
                help="The SIRIUS-CSI:Fingerid output can have additional metadata columns added; these can be either extracted
                from all MSP parameters or from the 'Name' and 'RECORD_TITLE' MSP parameters. Additionally, columns
                can be added from the 'Name' or 'RECORD_TITLE' parameters by splitting on | and :
@@ -59,10 +58,10 @@
             <option value="name_split" >Extra metadata columns from the Name or RECORD_TITLE (each column is split on "|" and ":" ) </option>
             <option value="all">Extra metadata columns from all MSP parameters</option>
         </param>
-        <param name="minMSMSpeaks" type="integer" label="Minimum number of MS/MS peaks" argument="--minMSMSpeaks" min="0" value="0"/>
+        <param argument="--minMSMSpeaks" type="integer" label="Minimum number of MS/MS peaks"  min="0" value="0"/>
     </inputs>
     <outputs>
-        <data name="results" format="tsv" label="${tool.name} results of ${input.name}" from_work_dir="sirius_all_summary.tsv"  />
+        <data name="results" format="tsv" from_work_dir="sirius_all_summary.tsv"  />
     </outputs>
     <tests>
         <test>
@@ -87,13 +86,11 @@
             <param name="profile" value="orbitrap"/>
             <output name="results" file="CCMSLIB00000578155_result.tsv"/>
         </test>
-
         <test>
             <!-- Test invalid adduct  -->
             <param name="input" value="invalid_adduct.msp"/>
             <output name="results" file="invalid_adduct_result.tsv"/>
         </test>
-
     </tests>
     <help>
 ----------------
@@ -161,6 +158,7 @@ Developers and contributors
 
 - **Jordi Capellades (j.capellades.to@gmail.com) - Universitat Rovira i Virgili (SP)**
 - **Thomas N Lawson (t.n.lawson@bham.ac.uk) - University of Birmingham (UK)**
+- **Simon Bray (sbray1371@gmail.com) - University of Freiburg (Germany)**
 - **Ralf Weber (r.j.weber@bham.ac.uk) - University of Birmingham (UK)**
 
     </help>
