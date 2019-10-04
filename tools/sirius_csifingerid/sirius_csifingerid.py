@@ -1,15 +1,17 @@
 from __future__ import absolute_import, print_function
+
 import argparse
 import csv
-import sys
-import six
-import re
-import os
-import tempfile
-import multiprocessing
 import glob
+import multiprocessing
+import os
+import re
+import sys
+import tempfile
 import uuid
 from collections import defaultdict
+
+import six
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--input_pth')
@@ -50,28 +52,37 @@ else:
 # Setup regular expressions for MSP parsing dictionary
 ######################################################################
 regex_msp = {}
-regex_msp['name'] = ['^Name(?:=|:)(.*)$']
-regex_msp['polarity'] = ['^ion.*mode(?:=|:)(.*)$', '^ionization.*mode(?:=|:)(.*)$', '^polarity(?:=|:)(.*)$']
-regex_msp['precursor_mz'] = ['^precursor.*m/z(?:=|:)\s*(\d*[.,]?\d*)$', '^precursor.*mz(?:=|:)\s*(\d*[.,]?\d*)$']
-regex_msp['precursor_type'] = ['^precursor.*type(?:=|:)(.*)$', '^adduct(?:=|:)(.*)$', '^ADDUCTIONNAME(?:=|:)(.*)$']
-regex_msp['num_peaks'] = ['^Num.*Peaks(?:=|:)\s*(\d*)$']
-regex_msp['msp'] = ['^Name(?:=|:)(.*)$']  # Flag for standard MSP format
+regex_msp['name'] = [r'^Name(?:=|:)(.*)$']
+regex_msp['polarity'] = [r'^ion.*mode(?:=|:)(.*)$',
+                         r'^ionization.*mode(?:=|:)(.*)$',
+                         r'^polarity(?:=|:)(.*)$']
+regex_msp['precursor_mz'] = [r'^precursor.*m/z(?:=|:)\s*(\d*[.,]?\d*)$',
+                             r'^precursor.*mz(?:=|:)\s*(\d*[.,]?\d*)$']
+regex_msp['precursor_type'] = [r'^precursor.*type(?:=|:)(.*)$',
+                               r'^adduct(?:=|:)(.*)$',
+                               r'^ADDUCTIONNAME(?:=|:)(.*)$']
+regex_msp['num_peaks'] = [r'^Num.*Peaks(?:=|:)\s*(\d*)$']
+regex_msp['msp'] = [r'^Name(?:=|:)(.*)$']  # Flag for standard MSP format
 
 regex_massbank = {}
-regex_massbank['name'] = ['^RECORD_TITLE:(.*)$']
-regex_massbank['polarity'] = ['^AC\$MASS_SPECTROMETRY:\s+ION_MODE\s+(.*)$']
-regex_massbank['precursor_mz'] = ['^MS\$FOCUSED_ION:\s+PRECURSOR_M/Z\s+(\d*[.,]?\d*)$']
-regex_massbank['precursor_type'] = ['^MS\$FOCUSED_ION:\s+PRECURSOR_TYPE\s+(.*)$']
-regex_massbank['num_peaks'] = ['^PK\$NUM_PEAK:\s+(\d*)']
-regex_massbank['cols'] = ['^PK\$PEAK:\s+(.*)']
-regex_massbank['massbank'] = ['^RECORD_TITLE:(.*)$']  # Flag for massbank format
+regex_massbank['name'] = [r'^RECORD_TITLE:(.*)$']
+regex_massbank['polarity'] = \
+    [r'^AC\$MASS_SPECTROMETRY:\s+ION_MODE\s+(.*)$']
+regex_massbank['precursor_mz'] = \
+    [r'^MS\$FOCUSED_ION:\s+PRECURSOR_M/Z\s+(\d*[.,]?\d*)$']
+regex_massbank['precursor_type'] = \
+    [r'^MS\$FOCUSED_ION:\s+PRECURSOR_TYPE\s+(.*)$']
+regex_massbank['num_peaks'] = [r'^PK\$NUM_PEAK:\s+(\d*)']
+regex_massbank['cols'] = [r'^PK\$PEAK:\s+(.*)']
+regex_massbank['massbank'] = [r'^RECORD_TITLE:(.*)$']  # Flag for massbank
 
 if args.schema == 'msp':
     meta_regex = regex_msp
 elif args.schema == 'massbank':
     meta_regex = regex_massbank
 elif args.schema == 'auto':
-    # If auto we just check for all the available paramter names and then determine if Massbank or MSP based on
+    # If auto we just check for all the available paramter names
+    # and then determine if Massbank or MSP based on
     # the name parameter
     meta_regex = {}
     meta_regex.update(regex_massbank)
@@ -84,14 +95,14 @@ elif args.schema == 'auto':
 
     print(meta_regex)
 
-
-
 # this dictionary will store the meta data results form the MSp file
 meta_info = {}
 
 
 # function to extract the meta data using the regular expressions
-def parse_meta(meta_regex, meta_info={}):
+def parse_meta(meta_regex, meta_info=None):
+    if meta_info is None:
+        meta_info = {}
     for k, regexes in six.iteritems(meta_regex):
         for reg in regexes:
             m = re.search(reg, line, re.IGNORECASE)
@@ -120,27 +131,29 @@ def init_paramd(args):
     return paramd
 
 
-
 ######################################################################
 # Function to run sirius when all meta and spectra is obtained
 ######################################################################
 def run_sirius(meta_info, peaklist, args, wd, spectrac):
-    # Get sample details (if possible to extract) e.g. if created as part of the msPurity pipeline)
-    # choose between getting additional details to add as columns as either all meta data from msp, just
-    # details from the record name (i.e. when using msPurity and we have the columns coded into the name) or
-    # just the spectra index (spectrac)
-
+    # Get sample details (if possible to extract) e.g. if created as part of
+    # the msPurity pipeline) choose between getting additional details to
+    # add as columns as either all meta data from msp, just details from the
+    # record name (i.e. when using msPurity and we have the columns
+    # coded into the name) or just the spectra index (spectrac)
     paramd = init_paramd(args)
 
     if args.meta_select_col == 'name':
         # have additional column of just the name
         paramd['additional_details'] = {'name': meta_info['name']}
     elif args.meta_select_col == 'name_split':
-        # have additional columns split by "|" and then on ":" e.g. MZ:100.2 | RT:20 | xcms_grp_id:1
-        paramd['additional_details'] = {sm.split(":")[0].strip(): sm.split(":")[1].strip() for sm in
-                                        meta_info['name'].split("|")}
+        # have additional columns split by "|" and
+        # then on ":" e.g. MZ:100.2 | RT:20 | xcms_grp_id:1
+        paramd['additional_details'] = {
+            sm.split(":")[0].strip(): sm.split(":")[1].strip() for sm in
+            meta_info['name'].split("|")}
     elif args.meta_select_col == 'all':
-        # have additional columns based on all the meta information extracted from the MSP
+        # have additional columns based on all
+        # the meta information extracted from the MSP
         paramd['additional_details'] = meta_info
     else:
         # Just have and index of the spectra in the MSP file
@@ -148,11 +161,12 @@ def run_sirius(meta_info, peaklist, args, wd, spectrac):
 
     paramd["SampleName"] = "{}_sirius_result".format(spectrac)
 
-    paramd["cli"]["--output"] = os.path.join(wd, "{}_sirius_result".format(spectrac))
+    paramd["cli"]["--output"] = \
+        os.path.join(wd, "{}_sirius_result".format(spectrac))
 
     # =============== Output peaks to txt file  ==============================
-    numlines = 0
-    paramd["cli"]["--ms2"] = os.path.join(wd, "{}_tmpspec.txt".format(spectrac))
+    paramd["cli"]["--ms2"] = os.path.join(wd,
+                                          "{}_tmpspec.txt".format(spectrac))
 
     # write spec file
     with open(paramd["cli"]["--ms2"], 'w') as outfile:
@@ -172,7 +186,7 @@ def run_sirius(meta_info, peaklist, args, wd, spectrac):
     if 'precursor_mz' in meta_info and meta_info['precursor_mz']:
         paramd["cli"]["--precursor"] = meta_info['precursor_mz']
 
-    # =============== Create CLI cmd for metfrag ===============================
+    # ============== Create CLI cmd for metfrag ===============================
     cmd = "sirius --fingerid"
     for k, v in six.iteritems(paramd["cli"]):
         cmd += " {} {}".format(str(k), str(v))
@@ -186,6 +200,7 @@ def run_sirius(meta_info, peaklist, args, wd, spectrac):
             os.system(cmd)
 
     return paramd, cmd
+
 
 def work(cmds):
     return [os.system(cmd) for cmd in cmds]
@@ -212,18 +227,19 @@ with open(args.input_pth, "r") as infile:
 
         if pnumlines == 0:
 
-            # =============== Extract metadata from MSP ========================
+            # ============== Extract metadata from MSP ========================
             meta_info = parse_meta(meta_regex, meta_info)
 
-            if ('massbank' in meta_info and 'cols' in meta_info) or ('msp' in meta_info and 'num_peaks' in meta_info):
-
+            if ('massbank' in meta_info and 'cols' in meta_info) or \
+                    ('msp' in meta_info and 'num_peaks' in meta_info):
                 pnumlines = int(meta_info['num_peaks'])
                 peaklist = []
                 plinesread = 0
 
         elif plinesread < pnumlines:
             # =============== Extract peaks from MSP ==========================
-            line = tuple(line.split())  # .split() will split on any empty space (i.e. tab and space)
+            # .split() will split on any empty space (i.e. tab and space)
+            line = tuple(line.split())
             # Keep only m/z and intensity, not relative intensity
             save_line = tuple(line[0].split() + line[1].split())
             plinesread += 1
@@ -231,7 +247,7 @@ with open(args.input_pth, "r") as infile:
             peaklist.append(save_line)
 
         elif plinesread and plinesread == pnumlines:
-            # =============== Get sample name and additional details for output =======
+            # ======= Get sample name and additional details for output =======
             spectrac += 1
             paramd, cmd = run_sirius(meta_info, peaklist, args, wd, spectrac)
 
@@ -242,8 +258,8 @@ with open(args.input_pth, "r") as infile:
             pnumlines = 0
             plinesread = 0
 
-            # end of file. Check if there is a MSP spectra to run metfrag on still
-
+            # end of file. Check if there is a MSP spectra to
+            # run metfrag on still
 
     if plinesread and plinesread == pnumlines:
         paramd, cmd = run_sirius(meta_info, peaklist, args, wd, spectrac + 1)
@@ -253,7 +269,8 @@ with open(args.input_pth, "r") as infile:
 
 # Perform multiprocessing on command line call level
 if int(args.cores_top_level) > 1:
-    cmds_chunks = [cmds[x:x + int(args.chunks)] for x in list(range(0, len(cmds), int(args.chunks)))]
+    cmds_chunks = [cmds[x:x + int(args.chunks)]
+                   for x in list(range(0, len(cmds), int(args.chunks)))]
     pool = multiprocessing.Pool(processes=int(args.cores_top_level))
     pool.map(work, cmds_chunks)
     pool.close()
@@ -262,12 +279,15 @@ if int(args.cores_top_level) > 1:
 ######################################################################
 # Concatenate and filter the output
 ######################################################################
-# outputs might have different headers. Need to get a list of all the headers before we start merging the files
-# outfiles = [os.path.join(wd, f) for f in glob.glob(os.path.join(wd, "*_metfrag_result.csv"))]
+# outputs might have different headers. Need to get a list of all the headers
+# before we start merging the files outfiles = [os.path.join(wd, f) for f in
+# glob.glob(os.path.join(wd, "*_metfrag_result.csv"))]
 outfiles = glob.glob(os.path.join(wd, '*', '*', 'summary_csi_fingerid.csv'))
 
 # sort files nicely
-outfiles.sort(key = lambda s: int(re.match('^.*/(\d+).*/.*/summary_csi_fingerid.csv', s).group(1)))
+outfiles.sort(key=lambda s: int(re.match(r'^.*/('
+                                         r'\d+).*/.*/summary_csi_fingerid.csv',
+                                         s).group(1)))
 print(outfiles)
 
 if len(outfiles) == 0:
@@ -287,9 +307,9 @@ for fn in outfiles:
 
 headers = list(paramd['additional_details'].keys()) + headers
 
-
 with open(args.result_pth, 'a') as merged_outfile:
-    dwriter = csv.DictWriter(merged_outfile, fieldnames=headers, delimiter='\t')
+    dwriter = csv.DictWriter(merged_outfile,
+                             fieldnames=headers, delimiter='\t')
     dwriter.writeheader()
 
     for fn in sorted(outfiles):
@@ -301,7 +321,8 @@ with open(args.result_pth, 'a') as merged_outfile:
             ad = paramds[fn.split(os.sep)[-3]]['additional_details']
 
             for line in reader:
-
                 line.update(ad)
+                # round score to 5 d.p.
+                line['score'] = round(float(line['score']), 5)
 
                 dwriter.writerow(line)

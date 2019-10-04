@@ -12,7 +12,7 @@ Source code: https://github.com/boecker-lab/sirius
 Version
 ------
 
-v4.0.1+Galaxy0.2.5
+v4.0.1+Galaxy1
 (Using `SIRIUS-CSI:FingerID v4.0.1 <https://bio.informatik.uni-jena.de/repository/dist-release-local/de/unijena/bioinf/ms/sirius/4.0.1/sirius-4.0.1-linux64-headless.zip>`_)
 
 Galaxy
@@ -22,20 +22,22 @@ Galaxy
 Installation note
 ------
 
-The SIRIUS-CSI:FingerID CLI used for the Galaxy wrapper  is not available currently in Bioconda but is accessible used the channel `tomnl <https://anaconda.org/tomnl/sirius-csifingeridx>`_, the Galaxy tool is currently using `SIRIUS-CSI:FingerID v4.0.1 <https://bio.informatik.uni-jena.de/repository/dist-release-local/de/unijena/bioinf/ms/sirius/4.0.1/sirius-4.0.1-linux64-headless.zip>`_).
-
-The conda channel "tomnl" needs to be available as a channel for Galaxy or Planemo, e.g. for planemo the following command is requried "--conda_ensure_channels tomnl,iuc,bioconda,conda-forge,defaults".
+The SIRIUS-CSI:FingerID CLI used for the Galaxy wrapper is available in Conda via the Bioconda channel. 
 
 
 Developers & Contributors
 -------------------------
  - Jordi Capellades (j.capellades.to@gmail.com) - Universitat Rovira i Virgili (Tarragona, Spain)
  - Tom Lawson (t.n.lawson@bham.ac.uk) - `University of Birmingham (UK) <http://www.birmingham.ac.uk/index.aspx>`_
+ - Simon Bray (sbray@informatik.uni-freiburg.de) - `University of Freiburg (Germany) <https://www.uni-freiburg.de/>`_
  - Ralf J. M. Weber (r.j.weber@bham.ac.uk) - `University of Birmingham (UK) <http://www.birmingham.ac.uk/index.aspx>`_
 
 
 Changes
 -------
+v4.0.1+Galaxy1:
+ - IUC updates
+
 v4.0.1+Galaxy0.2.6:
  - More updates for check empty results
 
