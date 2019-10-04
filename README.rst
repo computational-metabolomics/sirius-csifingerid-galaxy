@@ -29,6 +29,7 @@ Developers & Contributors
 -------------------------
  - Jordi Capellades (j.capellades.to@gmail.com) - Universitat Rovira i Virgili (Tarragona, Spain)
  - Tom Lawson (t.n.lawson@bham.ac.uk) - `University of Birmingham (UK) <http://www.birmingham.ac.uk/index.aspx>`_
+ - Simon Bray (sbray1371@gmail.com) - `University of Freiburg (Germany) <https://www.uni-freiburg.de/>`_
  - Ralf J. M. Weber (r.j.weber@bham.ac.uk) - `University of Birmingham (UK) <http://www.birmingham.ac.uk/index.aspx>`_
 
 
