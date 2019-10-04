@@ -106,6 +106,7 @@ install:
   - cat changed_tools_chunk.list
 
 script:
+
   - set -e
   - |
     if [ -s changed_tools_chunk.list ]; then
@@ -115,4 +116,3 @@ script:
             planemo test --galaxy_branch "$GALAXY_RELEASE" --galaxy_source "$GALAXY_REPO" "$DIR"
         done < changed_repositories_chunk.list
     fi
-
