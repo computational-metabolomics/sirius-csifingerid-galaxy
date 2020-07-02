@@ -189,14 +189,21 @@ def run_sirius(meta_info, peaklist, args, wd, spectrac):
     # Replace param details with details from MSP if required
     if 'precursor_type' in meta_info and meta_info['precursor_type']:
         paramd["cli"]["--ion"] = meta_info['precursor_type']
+        adduct = meta_info['precursor_type']
     else:
         if paramd["default_ion"]:
             paramd["cli"]["--ion"] = paramd["default_ion"]
+            adduct = paramd["default_ion"]
         else:
             paramd["cli"]["--auto-charge"] = ''
 
     if 'precursor_mz' in meta_info and meta_info['precursor_mz']:
         paramd["cli"]["--precursor"] = meta_info['precursor_mz']
+
+    if not ('precursor_type' in paramd['additional_details'] or 'adduct'
+            in paramd['additional_details']):
+        # If possible always good to have the adduct in output as a column
+        paramd['additional_details']['adduct'] = adduct
 
     # ============== Create CLI cmd for metfrag ===============================
     cmd = "sirius --fingerid"
