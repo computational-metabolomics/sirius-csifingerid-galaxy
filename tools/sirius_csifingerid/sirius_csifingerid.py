@@ -29,6 +29,7 @@ parser.add_argument('--meta_select_col', default='all')
 parser.add_argument('--cores_top_level', default=1)
 parser.add_argument('--chunks', default=1)
 parser.add_argument('--minMSMSpeaks', default=1)
+parser.add_argument('--rank_filter', default=0)
 parser.add_argument('--schema', default='msp')
 parser.add_argument('-a', '--adducts', action='append', nargs=1,
                     required=False, default=[], help='Adducts used')
@@ -261,7 +262,9 @@ with open(args.input_pth, "r") as infile:
             # ======= Get sample name and additional details for output =======
             if adducts_from_cli:
                 for adduct in adducts_from_cli:
+                    print(adduct)
                     spectrac += 1
+                    meta_info['precursor_type'] = adduct
                     paramd, cmd = run_sirius(meta_info, peaklist, args, wd,
                                              spectrac)
 
@@ -285,7 +288,9 @@ with open(args.input_pth, "r") as infile:
     if plinesread and plinesread == pnumlines:
         if adducts_from_cli:
             for adduct in adducts_from_cli:
+                print(adduct)
                 spectrac += 1
+                meta_info['precursor_type'] = adduct
                 paramd, cmd = run_sirius(meta_info, peaklist, args, wd,
                                          spectrac)
 
@@ -353,6 +358,10 @@ with open(args.result_pth, 'a') as merged_outfile:
             ad = paramds[fn.split(os.sep)[-3]]['additional_details']
 
             for line in reader:
+                if 0 < int(args.rank_filter) < int(line['rank']):
+                    # filter out those annotations greater than rank filter
+                    # If rank_filter is zero then skip
+                    continue
                 line.update(ad)
                 # round score to 5 d.p.
                 line['score'] = round(float(line['score']), 5)
