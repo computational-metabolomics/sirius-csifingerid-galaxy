@@ -25,12 +25,15 @@ parser.add_argument('--results_name')
 parser.add_argument('--out_dir')
 parser.add_argument('--tool_directory')
 parser.add_argument('--temp_dir')
-
 parser.add_argument('--meta_select_col', default='all')
 parser.add_argument('--cores_top_level', default=1)
 parser.add_argument('--chunks', default=1)
 parser.add_argument('--minMSMSpeaks', default=1)
+parser.add_argument('--rank_filter', default=0)
 parser.add_argument('--schema', default='msp')
+parser.add_argument('-a', '--adducts', action='append', nargs=1,
+                    required=False, default=[], help='Adducts used')
+
 args = parser.parse_args()
 print(args)
 if os.stat(args.input_pth).st_size == 0:
@@ -48,6 +51,15 @@ else:
     wd = os.path.join(td, str(uuid.uuid4()))
     os.mkdir(wd)
 
+print(args.adducts)
+if args.adducts:
+    adducts_from_cli = [
+        a[0].replace('__ob__', '[').replace('__cb__', ']') for a in
+        args.adducts
+    ]
+else:
+    adducts_from_cli = []
+
 ######################################################################
 # Setup regular expressions for MSP parsing dictionary
 ######################################################################
@@ -62,6 +74,12 @@ regex_msp['precursor_type'] = [r'^precursor.*type(?:=|:)(.*)$',
                                r'^adduct(?:=|:)(.*)$',
                                r'^ADDUCTIONNAME(?:=|:)(.*)$']
 regex_msp['num_peaks'] = [r'^Num.*Peaks(?:=|:)\s*(\d*)$']
+regex_msp['retention_time'] = [r'^RETENTION.*TIME(?:=|:)\s*(.*)$',
+                               r'^rt(?:=|:)\s*(.*)$',
+                               r'^time(?:=|:)\s*(.*)$']
+# From example winter_pos.mspy from kristian
+regex_msp['AlignmentID'] = [r'^AlignmentID(?:=|:)\s*(.*)$']
+
 regex_msp['msp'] = [r'^Name(?:=|:)(.*)$']  # Flag for standard MSP format
 
 regex_massbank = {}
@@ -73,8 +91,11 @@ regex_massbank['precursor_mz'] = \
 regex_massbank['precursor_type'] = \
     [r'^MS\$FOCUSED_ION:\s+PRECURSOR_TYPE\s+(.*)$']
 regex_massbank['num_peaks'] = [r'^PK\$NUM_PEAK:\s+(\d*)']
+regex_massbank['retention_time'] = [
+    r'^AC\$CHROMATOGRAPHY:\s+RETENTION_TIME\s*(\d*\.?\d+).*']
 regex_massbank['cols'] = [r'^PK\$PEAK:\s+(.*)']
 regex_massbank['massbank'] = [r'^RECORD_TITLE:(.*)$']  # Flag for massbank
+
 
 if args.schema == 'msp':
     meta_regex = regex_msp
@@ -141,6 +162,8 @@ def run_sirius(meta_info, peaklist, args, wd, spectrac):
     # record name (i.e. when using msPurity and we have the columns
     # coded into the name) or just the spectra index (spectrac)
     paramd = init_paramd(args)
+    meta_info = {k: v for k, v in meta_info.items() if k
+                 not in ['msp', 'massbank', 'cols']}
 
     if args.meta_select_col == 'name':
         # have additional column of just the name
@@ -177,14 +200,21 @@ def run_sirius(meta_info, peaklist, args, wd, spectrac):
     # Replace param details with details from MSP if required
     if 'precursor_type' in meta_info and meta_info['precursor_type']:
         paramd["cli"]["--ion"] = meta_info['precursor_type']
+        adduct = meta_info['precursor_type']
     else:
         if paramd["default_ion"]:
             paramd["cli"]["--ion"] = paramd["default_ion"]
+            adduct = paramd["default_ion"]
         else:
             paramd["cli"]["--auto-charge"] = ''
 
     if 'precursor_mz' in meta_info and meta_info['precursor_mz']:
         paramd["cli"]["--precursor"] = meta_info['precursor_mz']
+
+    if not ('precursor_type' in paramd['additional_details'] or 'adduct'
+            in paramd['additional_details']):
+        # If possible always good to have the adduct in output as a column
+        paramd['additional_details']['adduct'] = adduct
 
     # ============== Create CLI cmd for metfrag ===============================
     cmd = "sirius --fingerid"
@@ -248,11 +278,23 @@ with open(args.input_pth, "r") as infile:
 
         elif plinesread and plinesread == pnumlines:
             # ======= Get sample name and additional details for output =======
-            spectrac += 1
-            paramd, cmd = run_sirius(meta_info, peaklist, args, wd, spectrac)
+            if adducts_from_cli:
+                for adduct in adducts_from_cli:
+                    print(adduct)
+                    spectrac += 1
+                    meta_info['precursor_type'] = adduct
+                    paramd, cmd = run_sirius(meta_info, peaklist, args, wd,
+                                             spectrac)
 
-            paramds[paramd["SampleName"]] = paramd
-            cmds.append(cmd)
+                    paramds[paramd["SampleName"]] = paramd
+                    cmds.append(cmd)
+            else:
+                spectrac += 1
+                paramd, cmd = run_sirius(meta_info, peaklist, args, wd,
+                                         spectrac)
+
+                paramds[paramd["SampleName"]] = paramd
+                cmds.append(cmd)
 
             meta_info = {}
             pnumlines = 0
@@ -262,10 +304,23 @@ with open(args.input_pth, "r") as infile:
             # run metfrag on still
 
     if plinesread and plinesread == pnumlines:
-        paramd, cmd = run_sirius(meta_info, peaklist, args, wd, spectrac + 1)
+        if adducts_from_cli:
+            for adduct in adducts_from_cli:
+                print(adduct)
+                spectrac += 1
+                meta_info['precursor_type'] = adduct
+                paramd, cmd = run_sirius(meta_info, peaklist, args, wd,
+                                         spectrac)
 
-        paramds[paramd["SampleName"]] = paramd
-        cmds.append(cmd)
+                paramds[paramd["SampleName"]] = paramd
+                cmds.append(cmd)
+        else:
+            spectrac += 1
+            paramd, cmd = run_sirius(meta_info, peaklist, args, wd,
+                                     spectrac)
+
+            paramds[paramd["SampleName"]] = paramd
+            cmds.append(cmd)
 
 # Perform multiprocessing on command line call level
 if int(args.cores_top_level) > 1:
@@ -321,6 +376,10 @@ with open(args.result_pth, 'a') as merged_outfile:
             ad = paramds[fn.split(os.sep)[-3]]['additional_details']
 
             for line in reader:
+                if 0 < int(args.rank_filter) < int(line['rank']):
+                    # filter out those annotations greater than rank filter
+                    # If rank_filter is zero then skip
+                    continue
                 line.update(ad)
                 # round score to 5 d.p.
                 line['score'] = round(float(line['score']), 5)

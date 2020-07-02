@@ -12,7 +12,7 @@ Source code: https://github.com/boecker-lab/sirius
 Version
 ------
 
-v4.0.1+Galaxy3
+v4.0.1+Galaxy4
 (Using `SIRIUS-CSI:FingerID v4.0.1 <https://bio.informatik.uni-jena.de/repository/dist-release-local/de/unijena/bioinf/ms/sirius/4.0.1/sirius-4.0.1-linux64-headless.zip>`_)
 
 Galaxy
@@ -35,6 +35,9 @@ Developers & Contributors
 
 Changes
 -------
+v4.0.1+Galaxy4:
+ - Add adduct choice from tool or via MSP
+
 v4.0.1+Galaxy3:
  - Add profile to XML to enforce correct conda build
 
