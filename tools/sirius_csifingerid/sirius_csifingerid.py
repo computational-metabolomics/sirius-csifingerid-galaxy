@@ -25,12 +25,14 @@ parser.add_argument('--results_name')
 parser.add_argument('--out_dir')
 parser.add_argument('--tool_directory')
 parser.add_argument('--temp_dir')
-
 parser.add_argument('--meta_select_col', default='all')
 parser.add_argument('--cores_top_level', default=1)
 parser.add_argument('--chunks', default=1)
 parser.add_argument('--minMSMSpeaks', default=1)
 parser.add_argument('--schema', default='msp')
+parser.add_argument('-a', '--adducts', action='append', nargs=1,
+                    required=False, default=[], help='Adducts used')
+
 args = parser.parse_args()
 print(args)
 if os.stat(args.input_pth).st_size == 0:
@@ -47,6 +49,15 @@ else:
     td = tempfile.mkdtemp()
     wd = os.path.join(td, str(uuid.uuid4()))
     os.mkdir(wd)
+
+print(args.adducts)
+if args.adducts:
+    adducts_from_cli = [
+        a[0].replace('__ob__', '[').replace('__cb__', ']') for a in
+        args.adducts
+    ]
+else:
+    adducts_from_cli = []
 
 ######################################################################
 # Setup regular expressions for MSP parsing dictionary
@@ -248,11 +259,21 @@ with open(args.input_pth, "r") as infile:
 
         elif plinesread and plinesread == pnumlines:
             # ======= Get sample name and additional details for output =======
-            spectrac += 1
-            paramd, cmd = run_sirius(meta_info, peaklist, args, wd, spectrac)
+            if adducts_from_cli:
+                for adduct in adducts_from_cli:
+                    spectrac += 1
+                    paramd, cmd = run_sirius(meta_info, peaklist, args, wd,
+                                             spectrac)
 
-            paramds[paramd["SampleName"]] = paramd
-            cmds.append(cmd)
+                    paramds[paramd["SampleName"]] = paramd
+                    cmds.append(cmd)
+            else:
+                spectrac += 1
+                paramd, cmd = run_sirius(meta_info, peaklist, args, wd,
+                                         spectrac)
+
+                paramds[paramd["SampleName"]] = paramd
+                cmds.append(cmd)
 
             meta_info = {}
             pnumlines = 0
@@ -262,10 +283,21 @@ with open(args.input_pth, "r") as infile:
             # run metfrag on still
 
     if plinesread and plinesread == pnumlines:
-        paramd, cmd = run_sirius(meta_info, peaklist, args, wd, spectrac + 1)
+        if adducts_from_cli:
+            for adduct in adducts_from_cli:
+                spectrac += 1
+                paramd, cmd = run_sirius(meta_info, peaklist, args, wd,
+                                         spectrac)
 
-        paramds[paramd["SampleName"]] = paramd
-        cmds.append(cmd)
+                paramds[paramd["SampleName"]] = paramd
+                cmds.append(cmd)
+        else:
+            spectrac += 1
+            paramd, cmd = run_sirius(meta_info, peaklist, args, wd,
+                                     spectrac)
+
+            paramds[paramd["SampleName"]] = paramd
+            cmds.append(cmd)
 
 # Perform multiprocessing on command line call level
 if int(args.cores_top_level) > 1:

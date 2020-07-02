@@ -35,6 +35,9 @@ Developers & Contributors
 
 Changes
 -------
+v4.0.1+Galaxy4:
+ - Add adduct choice from tool or via MSP
+
 v4.0.1+Galaxy3:
  - Add profile to XML to enforce correct conda build
 
