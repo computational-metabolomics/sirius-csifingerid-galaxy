@@ -74,6 +74,12 @@ regex_msp['precursor_type'] = [r'^precursor.*type(?:=|:)(.*)$',
                                r'^adduct(?:=|:)(.*)$',
                                r'^ADDUCTIONNAME(?:=|:)(.*)$']
 regex_msp['num_peaks'] = [r'^Num.*Peaks(?:=|:)\s*(\d*)$']
+regex_msp['retention_time'] = [r'^RETENTION.*TIME(?:=|:)\s*(.*)$',
+                               r'^rt(?:=|:)\s*(.*)$',
+                               r'^time(?:=|:)\s*(.*)$']
+# From example winter_pos.mspy from kristian
+regex_msp['AlignmentID'] = [r'^AlignmentID(?:=|:)\s*(.*)$']
+
 regex_msp['msp'] = [r'^Name(?:=|:)(.*)$']  # Flag for standard MSP format
 
 regex_massbank = {}
@@ -85,8 +91,11 @@ regex_massbank['precursor_mz'] = \
 regex_massbank['precursor_type'] = \
     [r'^MS\$FOCUSED_ION:\s+PRECURSOR_TYPE\s+(.*)$']
 regex_massbank['num_peaks'] = [r'^PK\$NUM_PEAK:\s+(\d*)']
+regex_massbank['retention_time'] = [
+    r'^AC\$CHROMATOGRAPHY:\s+RETENTION_TIME\s*(\d*\.?\d+).*']
 regex_massbank['cols'] = [r'^PK\$PEAK:\s+(.*)']
 regex_massbank['massbank'] = [r'^RECORD_TITLE:(.*)$']  # Flag for massbank
+
 
 if args.schema == 'msp':
     meta_regex = regex_msp
@@ -153,6 +162,8 @@ def run_sirius(meta_info, peaklist, args, wd, spectrac):
     # record name (i.e. when using msPurity and we have the columns
     # coded into the name) or just the spectra index (spectrac)
     paramd = init_paramd(args)
+    meta_info = {k: v for k, v in meta_info.items() if k
+                 not in ['msp', 'massbank', 'cols']}
 
     if args.meta_select_col == 'name':
         # have additional column of just the name
