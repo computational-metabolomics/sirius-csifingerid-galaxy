@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function
-
 import argparse
 import csv
 import glob
@@ -11,11 +9,11 @@ import tempfile
 import uuid
 from collections import defaultdict
 
-import six
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--input_pth')
-parser.add_argument('--result_pth')
+parser.add_argument('--canopus_result_pth')
+parser.add_argument('--annotations_result_pth')
 parser.add_argument('--database')
 parser.add_argument('--profile')
 parser.add_argument('--candidates')
@@ -28,8 +26,11 @@ parser.add_argument('--temp_dir')
 parser.add_argument('--meta_select_col', default='all')
 parser.add_argument('--cores_top_level', default=1)
 parser.add_argument('--chunks', default=1)
-parser.add_argument('--minMSMSpeaks', default=1)
+parser.add_argument('--min_MSMS_peaks', default=1)
 parser.add_argument('--rank_filter', default=0)
+parser.add_argument('--confidence_filter', default=0)
+parser.add_argument('--backwards_compatible',
+                    default=False, action='store_true')
 parser.add_argument('--schema', default='msp')
 parser.add_argument('-a', '--adducts', action='append', nargs=1,
                     required=False, default=[], help='Adducts used')
@@ -124,7 +125,7 @@ meta_info = {}
 def parse_meta(meta_regex, meta_info=None):
     if meta_info is None:
         meta_info = {}
-    for k, regexes in six.iteritems(meta_regex):
+    for k, regexes in meta_regex.items():
         for reg in regexes:
             m = re.search(reg, line, re.IGNORECASE)
             if m:
@@ -203,7 +204,7 @@ def run_sirius(meta_info, peaklist, args, wd, spectrac):
         adduct = meta_info['precursor_type']
     else:
         if paramd["default_ion"]:
-            paramd["cli"]["--ion"] = paramd["default_ion"]
+            paramd["cli"]["--adduct"] = paramd["default_ion"]
             adduct = paramd["default_ion"]
         else:
             paramd["cli"]["--auto-charge"] = ''
@@ -217,14 +218,24 @@ def run_sirius(meta_info, peaklist, args, wd, spectrac):
         paramd['additional_details']['adduct'] = adduct
 
     # ============== Create CLI cmd for metfrag ===============================
-    cmd = "sirius --fingerid"
-    for k, v in six.iteritems(paramd["cli"]):
-        cmd += " {} {}".format(str(k), str(v))
+    cmd = "sirius --no-citations --ms2 {} --adduct {} --precursor {} -o {} " \
+          "formula -c {} --ppm-max {} --profile {} " \
+          "structure --database {} canopus".format(
+                       paramd["cli"]["--ms2"],
+                       adduct,
+                       paramd["cli"]["--precursor"],
+                       paramd["cli"]["--output"],
+                       paramd["cli"]["--candidates"],
+                       paramd["cli"]["--ppm-max"],
+                       paramd["cli"]["--profile"],
+                       paramd["cli"]["--database"]
+          )
+    print(cmd)
     paramds[paramd["SampleName"]] = paramd
 
     # =============== Run srius ==============================================
     # Filter before process with a minimum number of MS/MS peaks
-    if plinesread >= float(args.minMSMSpeaks):
+    if plinesread >= float(args.min_MSMS_peaks):
 
         if int(args.cores_top_level) == 1:
             os.system(cmd)
@@ -331,57 +342,85 @@ if int(args.cores_top_level) > 1:
     pool.close()
     pool.join()
 
+
 ######################################################################
 # Concatenate and filter the output
 ######################################################################
 # outputs might have different headers. Need to get a list of all the headers
 # before we start merging the files outfiles = [os.path.join(wd, f) for f in
 # glob.glob(os.path.join(wd, "*_metfrag_result.csv"))]
-outfiles = glob.glob(os.path.join(wd, '*', '*', 'summary_csi_fingerid.csv'))
+def concat_output(filename, result_pth,
+                  rank_filter, confidence_filter, backwards_compatible):
+    outfiles = glob.glob(os.path.join(wd, '*', '*{}'.format(filename)))
 
-# sort files nicely
-outfiles.sort(key=lambda s: int(re.match(r'^.*/('
-                                         r'\d+).*/.*/summary_csi_fingerid.csv',
-                                         s).group(1)))
-print(outfiles)
+    # sort files nicely
+    outfiles.sort(key=lambda s: int(re.match(r'^.*/('
+                                             r'\d+).*{}'.format(filename),
+                                             s).group(1)))
+    print(outfiles)
 
-if len(outfiles) == 0:
-    print('No results')
-    sys.exit()
+    if len(outfiles) == 0:
+        print('No results')
+        sys.exit()
 
-headers = []
-c = 0
-for fn in outfiles:
-    with open(fn, 'r') as infile:
-        reader = csv.reader(infile, delimiter='\t')
-        if sys.version_info >= (3, 0):
-            headers.extend(next(reader))
-        else:
-            headers.extend(reader.next())
-        break
+    headers = []
 
-headers = list(paramd['additional_details'].keys()) + headers
+    for fn in outfiles:
+        with open(fn, 'r') as infile:
+            reader = csv.reader(infile, delimiter='\t')
+            if sys.version_info >= (3, 0):
+                headers.extend(next(reader))
+            else:
+                headers.extend(reader.next())
+            break
 
-with open(args.result_pth, 'a') as merged_outfile:
-    dwriter = csv.DictWriter(merged_outfile,
-                             fieldnames=headers, delimiter='\t')
-    dwriter.writeheader()
+    headers = list(paramd['additional_details'].keys()) + headers
 
-    for fn in sorted(outfiles):
-        print(fn)
+    with open(result_pth, 'a') as merged_outfile:
+        dwriter = csv.DictWriter(merged_outfile,
+                                 fieldnames=headers, delimiter='\t')
+        dwriter.writeheader()
 
-        with open(fn) as infile:
-            reader = csv.DictReader(infile, delimiter='\t')
+        for fn in sorted(outfiles):
+            print(fn)
 
-            ad = paramds[fn.split(os.sep)[-3]]['additional_details']
+            with open(fn) as infile:
+                reader = csv.DictReader(infile, delimiter='\t')
 
-            for line in reader:
-                if 0 < int(args.rank_filter) < int(line['rank']):
-                    # filter out those annotations greater than rank filter
-                    # If rank_filter is zero then skip
-                    continue
-                line.update(ad)
-                # round score to 5 d.p.
-                line['score'] = round(float(line['score']), 5)
+                ad = paramds[fn.split(os.sep)[-2]]['additional_details']
 
-                dwriter.writerow(line)
+                for line in reader:
+                    if 'rank' in line and \
+                            0 < int(rank_filter) < int(line['rank']):
+                        # filter out those annotations greater than rank filter
+                        # If rank_filter is zero then skip
+                        continue
+
+                    if 'ConfidenceScore' in line \
+                            and 0 < int(confidence_filter) < int(line['rank']):
+                        # filter out those annotations greater than rank filter
+                        # If rank_filter is zero then skip
+                        continue
+                    line.update(ad)
+
+                    dwriter.writerow(line)
+
+    if backwards_compatible:
+        # Headers required in this format for tools that used
+        # v4.9.3 of SIRIUS-CSI:FingerID
+        s1 = "sed 's/InChIkey2D/inchikey2d/g' {r} > {r}".format(r=result_pth)
+        os.system(s1)
+        s2 = "sed 's/CSI:FingerIDScore/Score/' {r} > {r}".format(r=result_pth)
+        os.system(s2)
+
+
+concat_output('canopus_summary.tsv',
+              args.canopus_result_pth,
+              args.rank_filter,
+              args.confidence_filter,
+              args.backwards_compatible)
+concat_output('compound_identifications.tsv',
+              args.annotations_result_pth,
+              0,
+              0,
+              False)

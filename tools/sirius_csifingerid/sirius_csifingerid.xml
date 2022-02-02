@@ -1,9 +1,9 @@
 <tool id="sirius_csifingerid" name="SIRIUS-CSI:FingerID"
-      version="4.0.1+galaxy4" profile="18.01">
+      version="4.9.8+galaxy0" profile="21.01">
     <description>is used to identify metabolites using single and
         tandem mass spectrometry</description>
     <requirements>
-        <requirement type="package" version="4.0.1">
+        <requirement type="package" version="4.9.8">
             sirius-csifingerid</requirement>
     </requirements>
     <command detect_errors="exit_code">
@@ -17,10 +17,11 @@
             --ppm_max $ppm_max
             --polarity $polarity
             --out_dir .
-            --result_pth sirius_all_summary.tsv
+            --canopus_result_pth canopus_all_summary.tsv
+            --annotations_result_pth annotations_all_summary.tsv
             --cores_top_level 1
             --meta_select_col $meta_select_col
-            --minMSMSpeaks $minMSMSpeaks
+            --min_MSMS_peaks $min_MSMS_peaks
             --schema $schema
             --temp_dir .
 
@@ -47,6 +48,13 @@
             #end if
 
             --rank_filter $rank_filter
+
+            --confidence_filter $confidence_filter
+
+            #if $backwards_compatible
+                --backwards_compatible
+            #end if
+
     ]]></command>
     <inputs>
         <param name="input" argument="--input_pth" type="data" format="msp"
@@ -54,11 +62,12 @@
         <param argument="--database" type="select"
                label="Select SIRIUS-CSI:FingerID Database" >
             <option value="PubChem" >PubChem</option>
-            <option selected="true" value="hmdb">HMDB</option>
+            <option value="hmdb">HMDB</option>
             <option value="kegg">KEGG</option>
             <option value="knapsack">KNApSAcK</option>
             <option value="biocyc">BioCyc</option>
-            <option  value="all">All (see help)</option>
+            <option selected="true" value="bio">Bio (all biological)</option>
+            <option  value="all">All use all databases</option>
         </param>
         <param argument="--ppm_max" type="integer" value="10" min="0"
                label="Mass deviation of the fragment peaks in ppm" />
@@ -97,7 +106,7 @@
             <option value="all">
                 Extra metadata columns from all MSP parameters</option>
         </param>
-        <param argument="--minMSMSpeaks" type="integer" min="0" value="0"
+        <param argument="--min_MSMS_peaks" type="integer" min="0" value="0"
                label="Minimum number of MS/MS peaks"/>
 
         <conditional name="adducts_cond">
@@ -133,38 +142,53 @@
         <param argument="--rank_filter" type="integer" value="0"
                label="Only show the top ranked annotations less than or equal
                       to this value (default to show all annotations)"/>
+
+        <param argument="--confidence_filter" type="integer" value="0"
+               label="Only show annotations greater than or or equal
+                      to this value (default to show all annotations)"/>
+
+        <param argument="--backwards_compatible" type="boolean" checked="false"
+               label="Makes the outputs compatible with annotation workflows that used the old output from
+                      SIRIUS:CSI:FingerID v4.0.1"/>
     </inputs>
     <outputs>
-        <data name="results" format="tsv"
-              from_work_dir="sirius_all_summary.tsv"/>
+        <data name="canopus_results" format="tsv" label="${tool.name} on ${on_string}: CANOPUS"
+              from_work_dir="canopus_all_summary.tsv"/>
+        <data name="annotation_results" format="tsv" label="${tool.name} on ${on_string}: Annotations"
+              from_work_dir="annotations_all_summary.tsv"/>
     </outputs>
     <tests>
         <test>
             <!-- Test "massbank" style data format  -->
             <param name="input" value="ML006801.txt"  ftype="msp"/>
-            <output name="results" file="ML006801.tsv"/>
+            <output name="annotation_results" file="annotation_ML006801.tsv"/>
+            <output name="canopus_results" file="canopus_ML006801.tsv"/>
         </test>
         <test>
             <!-- Test "generic format" style data format  -->
             <param name="input" value="generic.msp" ftype="msp"/>
-            <output name="results" file="generic.tsv"/>
+            <output name="annotation_results" file="annotation_generic.tsv"/>
+            <output name="canopus_results" file="canopus_generic.tsv"/>
         </test>
         <test>
             <!-- Test for glucose (qtof) MassBank data format  -->
             <param name="input" value="RP022611.txt" ftype="msp"/>
             <param name="profile" value="qtof"/>
-            <output name="results" file="RP022611_result.tsv"/>
+            <output name="annotation_results" file="annotation_RP022611_result.tsv"/>
+            <output name="canopus_results" file="canopus_RP022611_result.tsv"/>
         </test>
         <test>
-            <!-- Test for glucose (q-exactive) GNPS, MoNA data format  -->
+            <!-- Test for glucose (q-exactive) GNPS, MoNA data format  (and test canopus)-->
             <param name="input" value="CCMSLIB00000578155.msp" ftype="msp"/>
             <param name="profile" value="orbitrap"/>
-            <output name="results" file="CCMSLIB00000578155_result.tsv"/>
+            <output name="annotation_results" file="annotation_CCMSLIB00000578155_result.tsv"/>
+            <output name="canopus_results" file="canopus_CCMSLIB00000578155_result.tsv"/>
         </test>
         <test>
             <!-- Test invalid adduct  -->
             <param name="input" value="invalid_adduct.msp" ftype="msp"/>
-            <output name="results" file="invalid_adduct_result.tsv"/>
+            <output name="annotation_results" file="annotation_invalid_adduct_result.tsv"/>
+            <output name="canopus_results" file="canopus_invalid_adduct_result.tsv"/>
         </test>
         <test>
             <!-- Test all adducts  -->
@@ -174,8 +198,16 @@
             <conditional name="adducts_cond">
                 <param name="adducts_selector" value="all"/>
             </conditional>
-            <output name="results" file="RP022611_result_all_adducts.tsv"/>
-
+            <output name="annotation_results" file="annotation_RP022611_result_all_adducts.tsv"/>
+            <output name="canopus_results" file="canopus_RP022611_result_all_adducts.tsv"/>
+        </test>
+        <test>
+            <!-- Test for backward compa format-->
+            <param name="input" value="CCMSLIB00000578155.msp" ftype="msp"/>
+            <param name="profile" value="orbitrap"/>
+            <param name="backwards_compatible" value="--backwards_compatible"/>
+            <output name="annotation_results" file="bc_annotation_CCMSLIB00000578155_result.tsv"/>
+            <output name="canopus_results" file="bc_canopus_CCMSLIB00000578155_result.tsv"/>
         </test>
     </tests>
     <help>
@@ -215,7 +247,9 @@ The following databases are available:
 
 * BioCyc
 
-* All (SIRIUS will consider all m/z possible molecular formulas) 
+* Bio (default in CLI)
+
+* All
 
 **\3. Mass deviation of the fragment peaks in ppm**
 
