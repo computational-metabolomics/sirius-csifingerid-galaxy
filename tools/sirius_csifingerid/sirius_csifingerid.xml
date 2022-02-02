@@ -1,5 +1,5 @@
 <tool id="sirius_csifingerid" name="SIRIUS-CSI:FingerID"
-      version="4.9.8+galaxy0" profile="19.01">
+      version="4.9.8+galaxy0" profile="21.01">
     <description>is used to identify metabolites using single and
         tandem mass spectrometry</description>
     <requirements>
@@ -9,7 +9,7 @@
     <command detect_errors="exit_code">
     <![CDATA[
 
-        python3 '$__tool_directory__/sirius_csifingerid.py'
+        python '$__tool_directory__/sirius_csifingerid.py'
             --input_pth '$input'
             --database $database
             --profile $profile
