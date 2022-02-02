@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function
-
 import argparse
 import csv
 import glob
@@ -11,7 +9,6 @@ import tempfile
 import uuid
 from collections import defaultdict
 
-import six
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--input_pth')
@@ -128,7 +125,7 @@ meta_info = {}
 def parse_meta(meta_regex, meta_info=None):
     if meta_info is None:
         meta_info = {}
-    for k, regexes in six.iteritems(meta_regex):
+    for k, regexes in meta_regex.items():
         for reg in regexes:
             m = re.search(reg, line, re.IGNORECASE)
             if m:
