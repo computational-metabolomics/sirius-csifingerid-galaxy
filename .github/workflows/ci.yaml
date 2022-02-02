@@ -42,7 +42,7 @@ jobs:
     - name: Fake a planemo run to update cache
       run: |
         touch tool.xml
-        PIP_QUIET=1 planemo test --galaxy_python_version ${{ matrix.python-version }} --galaxy_branch $GALAXY_RELEASE
+        PIP_QUIET=1 planemo test --galaxy_python_version ${{ matrix.python-version }} --no_conda_auto_init --galaxy_branch $GALAXY_RELEASE
   test:
     name: Test tools
     # This job runs on Linux
@@ -87,13 +87,8 @@ jobs:
       run: |
            mkdir json_output/
            while read -r TOOLS; do
-               if grep -qf .tt_biocontainer_skip <(echo $TOOLS); then
-                   PLANEMO_OPTIONS=""
-               else
-                   PLANEMO_OPTIONS="--biocontainers --no_dependency_resolution --no_conda_auto_init"
-               fi
                json=$(mktemp -u -p json_output --suff .json)
-               PIP_QUIET=1 planemo test --database_connection postgresql://postgres:postgres@localhost:5432/galaxy $PLANEMO_OPTIONS --galaxy_branch $GALAXY_RELEASE  --galaxy_python_version ${{ matrix.python-version }} --test_output_json $json $TOOLS || true
+               PIP_QUIET=1 planemo test  --galaxy_branch $GALAXY_RELEASE  --test_output_json $json $TOOLS || true
                docker system prune --all --force --volumes || true
            done < tool.list
     - name: Merge tool_test_output.json files
