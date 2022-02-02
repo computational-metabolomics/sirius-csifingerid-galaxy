@@ -32,7 +32,8 @@ parser.add_argument('--chunks', default=1)
 parser.add_argument('--min_MSMS_peaks', default=1)
 parser.add_argument('--rank_filter', default=0)
 parser.add_argument('--confidence_filter', default=0)
-parser.add_argument('--backwards_compatible', default=False, action='store_true')
+parser.add_argument('--backwards_compatible',
+                    default=False, action='store_true')
 parser.add_argument('--schema', default='msp')
 parser.add_argument('-a', '--adducts', action='append', nargs=1,
                     required=False, default=[], help='Adducts used')
@@ -221,7 +222,8 @@ def run_sirius(meta_info, peaklist, args, wd, spectrac):
 
     # ============== Create CLI cmd for metfrag ===============================
     cmd = "sirius --no-citations --ms2 {} --adduct {} --precursor {} -o {} " \
-          "formula -c {} --ppm-max {} --profile {} structure --database {} canopus".format(
+          "formula -c {} --ppm-max {} --profile {} " \
+          "structure --database {} canopus".format(
                        paramd["cli"]["--ms2"],
                        adduct,
                        paramd["cli"]["--precursor"],
@@ -230,10 +232,9 @@ def run_sirius(meta_info, peaklist, args, wd, spectrac):
                        paramd["cli"]["--ppm-max"],
                        paramd["cli"]["--profile"],
                        paramd["cli"]["--database"]
-    )
+          )
     print(cmd)
     paramds[paramd["SampleName"]] = paramd
-
 
     # =============== Run srius ==============================================
     # Filter before process with a minimum number of MS/MS peaks
@@ -344,13 +345,15 @@ if int(args.cores_top_level) > 1:
     pool.close()
     pool.join()
 
+
 ######################################################################
 # Concatenate and filter the output
 ######################################################################
 # outputs might have different headers. Need to get a list of all the headers
 # before we start merging the files outfiles = [os.path.join(wd, f) for f in
 # glob.glob(os.path.join(wd, "*_metfrag_result.csv"))]
-def concat_output(filename, result_pth, rank_filter, confidence_filter, backwards_compatible):
+def concat_output(filename, result_pth,
+                  rank_filter, confidence_filter, backwards_compatible):
     outfiles = glob.glob(os.path.join(wd, '*', '*{}'.format(filename)))
 
     # sort files nicely
@@ -364,7 +367,7 @@ def concat_output(filename, result_pth, rank_filter, confidence_filter, backward
         sys.exit()
 
     headers = []
-    c = 0
+
     for fn in outfiles:
         with open(fn, 'r') as infile:
             reader = csv.reader(infile, delimiter='\t')
@@ -390,12 +393,14 @@ def concat_output(filename, result_pth, rank_filter, confidence_filter, backward
                 ad = paramds[fn.split(os.sep)[-2]]['additional_details']
 
                 for line in reader:
-                    if 'rank' in line and 0 < int(rank_filter) < int(line['rank']):
+                    if 'rank' in line and \
+                            0 < int(rank_filter) < int(line['rank']):
                         # filter out those annotations greater than rank filter
                         # If rank_filter is zero then skip
                         continue
 
-                    if 'ConfidenceScore' in line and 0 < int(confidence_filter) < int(line['rank']):
+                    if 'ConfidenceScore' in line \
+                            and 0 < int(confidence_filter) < int(line['rank']):
                         # filter out those annotations greater than rank filter
                         # If rank_filter is zero then skip
                         continue
@@ -404,9 +409,13 @@ def concat_output(filename, result_pth, rank_filter, confidence_filter, backward
                     dwriter.writerow(line)
 
     if backwards_compatible:
-        # Headers required in this format for tools that used v4.9.3 of SIRIUS-CSI:FingerID
-        os.system("sed 's/InChIkey2D/inchikey2d/g' {} > {}".format(result_pth))
-        os.system("sed 's/CSI:FingerIDScore/Score/' {} > {}".format(result_pth))
+        # Headers required in this format for tools that used
+        # v4.9.3 of SIRIUS-CSI:FingerID
+        s1 = "sed 's/InChIkey2D/inchikey2d/g' {r} > {r}".format(r=result_pth)
+        os.system(s1)
+        s2 = "sed 's/CSI:FingerIDScore/Score/' {r} > {r}".format(r=result_pth)
+        os.system(s2)
+
 
 concat_output('canopus_summary.tsv',
               args.canopus_result_pth,
