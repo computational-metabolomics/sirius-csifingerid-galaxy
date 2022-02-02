@@ -12,8 +12,7 @@ Source code: https://github.com/boecker-lab/sirius
 Version
 ------
 
-v4.0.1+Galaxy4
-(Using `SIRIUS-CSI:FingerID v4.0.1 <https://bio.informatik.uni-jena.de/repository/dist-release-local/de/unijena/bioinf/ms/sirius/4.0.1/sirius-4.0.1-linux64-headless.zip>`_)
+v4.9.8+Galaxy0
 
 Galaxy
 ------
@@ -35,6 +34,10 @@ Developers & Contributors
 
 Changes
 -------
+v4.9.8+Galaxy0:
+ - Update to work with v4.9.8 of SIRIUS-CSI:FingerID
+ - Output now includes summary of CANOPUS analysis
+
 v4.0.1+Galaxy4:
  - Add adduct choice from tool or via MSP
 
