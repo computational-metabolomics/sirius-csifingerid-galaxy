@@ -36,7 +36,7 @@ Changes
 -------
 v4.9.8+Galaxy1:
  - Fix galaxy wrapper rank and confidence filter
- - Put Galaxy "profile" as 19.01 rather than 21.01
+ - Put Galaxy "profile" as 19.05 rather than 21.01
 
 v4.9.8+Galaxy0:
  - Update to work with v4.9.8 of SIRIUS-CSI:FingerID
