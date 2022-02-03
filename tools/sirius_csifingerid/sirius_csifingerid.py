@@ -397,7 +397,8 @@ def concat_output(filename, result_pth,
                         continue
 
                     if 'ConfidenceScore' in line \
-                            and 0 < int(confidence_filter) < int(line['rank']):
+                            and 0 < float(confidence_filter) \
+                            and float(confidence_filter) > float(line['ConfidenceScore']):
                         # filter out those annotations greater than rank filter
                         # If rank_filter is zero then skip
                         continue
@@ -414,13 +415,13 @@ def concat_output(filename, result_pth,
         os.system(s2)
 
 
-concat_output('canopus_summary.tsv',
-              args.canopus_result_pth,
+concat_output('compound_identifications.tsv',
+              args.annotations_result_pth,
               args.rank_filter,
               args.confidence_filter,
               args.backwards_compatible)
-concat_output('compound_identifications.tsv',
-              args.annotations_result_pth,
+concat_output('canopus_summary.tsv',
+              args.canopus_result_pth,
               0,
               0,
               False)

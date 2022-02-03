@@ -1,5 +1,5 @@
 <tool id="sirius_csifingerid" name="SIRIUS-CSI:FingerID"
-      version="4.9.8+galaxy0" profile="21.01">
+      version="4.9.8+galaxy0" profile="19.01">
     <description>is used to identify metabolites using single and
         tandem mass spectrometry</description>
     <requirements>
@@ -143,7 +143,7 @@
                label="Only show the top ranked annotations less than or equal
                       to this value (default to show all annotations)"/>
 
-        <param argument="--confidence_filter" type="integer" value="0"
+        <param argument="--confidence_filter" type="float" value="0"
                label="Only show annotations greater than or or equal
                       to this value (default to show all annotations)"/>
 
@@ -208,6 +208,13 @@
             <param name="backwards_compatible" value="--backwards_compatible"/>
             <output name="annotation_results" file="bc_annotation_CCMSLIB00000578155_result.tsv"/>
             <output name="canopus_results" file="bc_canopus_CCMSLIB00000578155_result.tsv"/>
+        </test>
+        <test>
+            <!-- Test confidence filter  -->
+            <param name="input" value="generic.msp" ftype="msp"/>
+            <param name="confidence_filter" value="0.7"/>
+            <output name="annotation_results" file="cf_annotation_generic_msp_result.tsv"/>
+            <output name="canopus_results" file="cf_canopus_generic_msp_result.tsv"/>
         </test>
     </tests>
     <help>
