@@ -149,7 +149,7 @@
 
         <param argument="--backwards_compatible" type="boolean" checked="false"
                label="Makes the outputs compatible with annotation workflows that used the old output from
-                      SIRIUS:CSI:FingerID v4.0.1"/>
+                      SIRIUS-CSI:FingerID v4.0.1"/>
     </inputs>
     <outputs>
         <data name="canopus_results" format="tsv" label="${tool.name} on ${on_string}: CANOPUS"
