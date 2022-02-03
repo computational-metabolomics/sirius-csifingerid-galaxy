@@ -396,9 +396,10 @@ def concat_output(filename, result_pth,
                         # If rank_filter is zero then skip
                         continue
 
-                    if 'ConfidenceScore' in line \
-                            and 0 < float(confidence_filter) \
-                            and float(confidence_filter) > float(line['ConfidenceScore']):
+                    if ('ConfidenceScore' in line
+                        and 0 < float(confidence_filter)
+                        and float(confidence_filter) >
+                            float(line['ConfidenceScore'])):
                         # filter out those annotations greater than rank filter
                         # If rank_filter is zero then skip
                         continue
