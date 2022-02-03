@@ -12,7 +12,7 @@ env:
 jobs:
   setup:
     name: Setup cache and determine changed repositories
-    if: github.ref == 'refs/heads/master' && github.repository_owner == 'computational-metabolomics'
+    if: github.repository_owner == 'computational-metabolomics'
     runs-on: ubuntu-latest
     outputs:
       galaxy-head-sha: ${{ steps.get-galaxy-sha.outputs.galaxy-head-sha }}
