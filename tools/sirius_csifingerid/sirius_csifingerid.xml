@@ -61,13 +61,13 @@
                label="MSP file (output from Create MSP tool)" />
         <param argument="--database" type="select"
                label="Select SIRIUS-CSI:FingerID Database" >
-            <option value="PubChem" >PubChem</option>
-            <option value="hmdb">HMDB</option>
-            <option value="kegg">KEGG</option>
-            <option value="knapsack">KNApSAcK</option>
-            <option value="biocyc">BioCyc</option>
-            <option selected="true" value="bio">Bio (all biological)</option>
-            <option  value="all">All use all databases</option>
+            <option value="PUBCHEM" >PubChem</option>
+            <option value="HMDB">HMDB</option>
+            <option value="KEGG">KEGG</option>
+            <option value="KNAPSACK">KNApSAcK</option>
+            <option value="BIOCYC">BioCyc</option>
+            <option selected="true" value="BIO">Bio (all biological)</option>
+            <option value="ALL">All (use all databases)</option>
         </param>
         <param argument="--ppm_max" type="integer" value="10" min="0"
                label="Mass deviation of the fragment peaks in ppm" />
