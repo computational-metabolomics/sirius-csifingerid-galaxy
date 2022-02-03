@@ -390,8 +390,8 @@ def concat_output(filename, result_pth,
                 ad = paramds[fn.split(os.sep)[-2]]['additional_details']
 
                 for line in reader:
-                    if ('rank' in line
-                         and 0 < int(rank_filter) < int(line['rank'])):
+                    if 'rank' in line \
+                            and 0 < int(rank_filter) < int(line['rank']):
                         # filter out those annotations greater than rank filter
                         # If rank_filter is zero then skip
                         continue
