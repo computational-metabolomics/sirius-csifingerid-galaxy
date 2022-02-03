@@ -5,6 +5,7 @@
     <requirements>
         <requirement type="package" version="4.9.8">
             sirius-csifingerid</requirement>
+        <requirement type="package">python</requirement>
     </requirements>
     <command detect_errors="exit_code">
     <![CDATA[
