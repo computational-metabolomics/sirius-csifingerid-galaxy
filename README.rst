@@ -12,7 +12,7 @@ Source code: https://github.com/boecker-lab/sirius
 Version
 ------
 
-v4.9.8+Galaxy0
+v4.9.8+Galaxy1
 
 Galaxy
 ------
