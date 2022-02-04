@@ -34,6 +34,10 @@ Developers & Contributors
 
 Changes
 -------
+v4.9.8+Galaxy2:
+ - Remove backwards compatibility option
+ - Check for N/A values for confidence filter
+
 v4.9.8+Galaxy1:
  - Fix galaxy wrapper rank and confidence filter
  - Put Galaxy "profile" as 19.05 rather than 21.01

@@ -16,14 +16,14 @@
             --candidates $candidates
             --ppm_max $ppm_max
             --polarity $polarity
-            --out_dir .
+            --out_dir $__new_file_path__
             --canopus_result_pth canopus_all_summary.tsv
             --annotations_result_pth annotations_all_summary.tsv
             --cores_top_level 1
             --meta_select_col $meta_select_col
             --min_MSMS_peaks $min_MSMS_peaks
             --schema $schema
-            --temp_dir .
+            --temp_dir $__new_file_path__
 
             #if $adducts_cond.adducts_selector == 'select':
                 #for $a in $adducts_cond.adducts
@@ -51,9 +51,6 @@
 
             --confidence_filter $confidence_filter
 
-            #if $backwards_compatible
-                --backwards_compatible
-            #end if
 
     ]]></command>
     <inputs>
@@ -147,9 +144,6 @@
                label="Only show annotations greater than or or equal
                       to this value (default to show all annotations)"/>
 
-        <param argument="--backwards_compatible" type="boolean" checked="false"
-               label="Makes the outputs compatible with annotation workflows that used the old output from
-                      SIRIUS-CSI:FingerID v4.0.1"/>
     </inputs>
     <outputs>
         <data name="canopus_results" format="tsv" label="${tool.name} on ${on_string}: CANOPUS"
@@ -200,14 +194,6 @@
             </conditional>
             <output name="annotation_results" file="annotation_RP022611_result_all_adducts.tsv"/>
             <output name="canopus_results" file="canopus_RP022611_result_all_adducts.tsv"/>
-        </test>
-        <test>
-            <!-- Test for backward compa format-->
-            <param name="input" value="CCMSLIB00000578155.msp" ftype="msp"/>
-            <param name="profile" value="orbitrap"/>
-            <param name="backwards_compatible" value="--backwards_compatible"/>
-            <output name="annotation_results" file="bc_annotation_CCMSLIB00000578155_result.tsv"/>
-            <output name="canopus_results" file="bc_canopus_CCMSLIB00000578155_result.tsv"/>
         </test>
         <test>
             <!-- Test confidence filter  -->
