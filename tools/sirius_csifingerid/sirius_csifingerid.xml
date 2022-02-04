@@ -1,5 +1,5 @@
 <tool id="sirius_csifingerid" name="SIRIUS-CSI:FingerID"
-      version="4.9.8+galaxy1" profile="19.05">
+      version="4.9.8+galaxy2" profile="19.05">
     <description>is used to identify metabolites using single and
         tandem mass spectrometry</description>
     <requirements>
