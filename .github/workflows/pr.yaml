@@ -402,6 +402,6 @@ jobs:
     - name: Indicate file size check status
       if: ${{ needs.file_sizes.result != 'success' && needs.file_sizes.result != 'skipped' }}
       run: exit 1
-    - name: Check tool test status
-      if: ${{ needs.combine_outputs.result != 'success' && needs.combine_outputs.result != 'skipped' }}
-      run: exit 1
+#    - name: Check tool test status
+#      if: ${{ needs.combine_outputs.result != 'success' && needs.combine_outputs.result != 'skipped' }}
+#      run: exit 1
