@@ -1,5 +1,5 @@
 <tool id="sirius_csifingerid" name="SIRIUS-CSI:FingerID"
-      version="4.9.8+galaxy0" profile="21.01">
+      version="4.9.8+galaxy0" profile="19.05">
     <description>is used to identify metabolites using single and
         tandem mass spectrometry</description>
     <requirements>
@@ -61,13 +61,13 @@
                label="MSP file (output from Create MSP tool)" />
         <param argument="--database" type="select"
                label="Select SIRIUS-CSI:FingerID Database" >
-            <option value="PubChem" >PubChem</option>
-            <option value="hmdb">HMDB</option>
-            <option value="kegg">KEGG</option>
-            <option value="knapsack">KNApSAcK</option>
-            <option value="biocyc">BioCyc</option>
-            <option selected="true" value="bio">Bio (all biological)</option>
-            <option  value="all">All use all databases</option>
+            <option value="PUBCHEM" >PubChem</option>
+            <option value="HMDB">HMDB</option>
+            <option value="KEGG">KEGG</option>
+            <option value="KNAPSACK">KNApSAcK</option>
+            <option value="BIOCYC">BioCyc</option>
+            <option selected="true" value="BIO">Bio (all biological)</option>
+            <option value="ALL">All (use all databases)</option>
         </param>
         <param argument="--ppm_max" type="integer" value="10" min="0"
                label="Mass deviation of the fragment peaks in ppm" />
@@ -143,13 +143,13 @@
                label="Only show the top ranked annotations less than or equal
                       to this value (default to show all annotations)"/>
 
-        <param argument="--confidence_filter" type="integer" value="0"
+        <param argument="--confidence_filter" type="float" value="0"
                label="Only show annotations greater than or or equal
                       to this value (default to show all annotations)"/>
 
         <param argument="--backwards_compatible" type="boolean" checked="false"
                label="Makes the outputs compatible with annotation workflows that used the old output from
-                      SIRIUS:CSI:FingerID v4.0.1"/>
+                      SIRIUS-CSI:FingerID v4.0.1"/>
     </inputs>
     <outputs>
         <data name="canopus_results" format="tsv" label="${tool.name} on ${on_string}: CANOPUS"
@@ -208,6 +208,13 @@
             <param name="backwards_compatible" value="--backwards_compatible"/>
             <output name="annotation_results" file="bc_annotation_CCMSLIB00000578155_result.tsv"/>
             <output name="canopus_results" file="bc_canopus_CCMSLIB00000578155_result.tsv"/>
+        </test>
+        <test>
+            <!-- Test confidence filter  -->
+            <param name="input" value="generic.msp" ftype="msp"/>
+            <param name="confidence_filter" value="0.7"/>
+            <output name="annotation_results" file="cf_annotation_generic_msp_result.tsv"/>
+            <output name="canopus_results" file="cf_canopus_generic_msp_result.tsv"/>
         </test>
     </tests>
     <help>

@@ -12,7 +12,7 @@ Source code: https://github.com/boecker-lab/sirius
 Version
 ------
 
-v4.9.8+Galaxy0
+v4.9.8+Galaxy1
 
 Galaxy
 ------
@@ -34,6 +34,10 @@ Developers & Contributors
 
 Changes
 -------
+v4.9.8+Galaxy1:
+ - Fix galaxy wrapper rank and confidence filter
+ - Put Galaxy "profile" as 19.05 rather than 21.01
+
 v4.9.8+Galaxy0:
  - Update to work with v4.9.8 of SIRIUS-CSI:FingerID
  - Output now includes summary of CANOPUS analysis
