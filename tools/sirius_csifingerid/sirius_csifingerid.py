@@ -401,10 +401,9 @@ def concat_output(filename, result_pth,
                             # Value is NA or N/A
                             continue
 
-                        if  (0 < float(confidence_filter)
-                            and
-                            float(line['ConfidenceScore']) <
-                            float(confidence_filter)):
+                        if (0 < float(confidence_filter)
+                            and float(line['ConfidenceScore'])
+                                < float(confidence_filter)):
                             # filter out those annotations that are less than
                             # the confidence filter value
                             continue
