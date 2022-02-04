@@ -42,7 +42,7 @@ if os.stat(args.input_pth).st_size == 0:
     exit()
 
 if args.temp_dir:
-    wd = os.path.join(args.temp_dir, 'temp')
+    wd = os.path.join(args.temp_dir, 'temp_'+str(uuid.uuid4()))
     os.mkdir(wd)
 
     if not os.path.exists(wd):
@@ -396,33 +396,27 @@ def concat_output(filename, result_pth,
                         # If rank_filter is zero then skip
                         continue
 
-                    if ('ConfidenceScore' in line
-                        and 0 < float(confidence_filter)
-                        and float(line['ConfidenceScore']) <
-                            float(confidence_filter)):
-                        # filter out those annotations that are less than
-                        # the confidence filter value
-                        continue
+                    if 'ConfidenceScore' in line:
+                        if isinstance(line['ConfidenceScore'], str):
+                            # Value is NA or N/A
+                            continue
+
+                        if (0 < float(confidence_filter)
+                            and float(line['ConfidenceScore'])
+                                < float(confidence_filter)):
+                            # filter out those annotations that are less than
+                            # the confidence filter value
+                            continue
                     line.update(ad)
 
                     dwriter.writerow(line)
-
-    if backwards_compatible:
-        # Headers required in this format for tools that used
-        # v4.9.3 of SIRIUS-CSI:FingerID
-        s1 = "sed 's/InChIkey2D/inchikey2d/g' {r} > {r}".format(r=result_pth)
-        os.system(s1)
-        s2 = "sed 's/CSI:FingerIDScore/Score/' {r} > {r}".format(r=result_pth)
-        os.system(s2)
 
 
 concat_output('compound_identifications.tsv',
               args.annotations_result_pth,
               args.rank_filter,
-              args.confidence_filter,
-              args.backwards_compatible)
+              args.confidence_filter)
 concat_output('canopus_summary.tsv',
               args.canopus_result_pth,
               0,
-              0,
-              False)
+              0)
