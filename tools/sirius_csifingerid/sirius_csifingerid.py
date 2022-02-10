@@ -29,8 +29,6 @@ parser.add_argument('--chunks', default=1)
 parser.add_argument('--min_MSMS_peaks', default=1)
 parser.add_argument('--rank_filter', default=0)
 parser.add_argument('--confidence_filter', default=0)
-parser.add_argument('--backwards_compatible',
-                    default=False, action='store_true')
 parser.add_argument('--schema', default='msp')
 parser.add_argument('-a', '--adducts', action='append', nargs=1,
                     required=False, default=[], help='Adducts used')
@@ -350,7 +348,7 @@ if int(args.cores_top_level) > 1:
 # before we start merging the files outfiles = [os.path.join(wd, f) for f in
 # glob.glob(os.path.join(wd, "*_metfrag_result.csv"))]
 def concat_output(filename, result_pth,
-                  rank_filter, confidence_filter, backwards_compatible):
+                  rank_filter, confidence_filter):
     outfiles = glob.glob(os.path.join(wd, '*', '*{}'.format(filename)))
 
     # sort files nicely
