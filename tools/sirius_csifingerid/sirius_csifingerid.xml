@@ -8,7 +8,7 @@
     </requirements>
     <command detect_errors="exit_code">
     <![CDATA[
-
+        export _JAVA_OPTIONS=-Duser.home=$__new_file_path__ &&
         python '$__tool_directory__/sirius_csifingerid.py'
             --input_pth '$input'
             --database $database
@@ -20,6 +20,7 @@
             --canopus_result_pth canopus_all_summary.tsv
             --annotations_result_pth annotations_all_summary.tsv
             --cores_top_level 1
+            --cores_sirius \${GALAXY_SLOTS:-4}
             --meta_select_col $meta_select_col
             --min_MSMS_peaks $min_MSMS_peaks
             --schema $schema

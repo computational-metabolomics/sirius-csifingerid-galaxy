@@ -25,6 +25,7 @@ parser.add_argument('--tool_directory')
 parser.add_argument('--temp_dir')
 parser.add_argument('--meta_select_col', default='all')
 parser.add_argument('--cores_top_level', default=1)
+parser.add_argument('--cores_sirius', default=4)
 parser.add_argument('--chunks', default=1)
 parser.add_argument('--min_MSMS_peaks', default=1)
 parser.add_argument('--rank_filter', default=0)
@@ -137,6 +138,7 @@ def parse_meta(meta_regex, meta_info=None):
 def init_paramd(args):
     paramd = defaultdict()
     paramd["cli"] = {}
+    paramd["cli"]["--cores"] = args.cores_sirius
     paramd["cli"]["--database"] = args.database
     paramd["cli"]["--profile"] = args.profile
     paramd["cli"]["--candidates"] = args.candidates
@@ -216,9 +218,10 @@ def run_sirius(meta_info, peaklist, args, wd, spectrac):
         paramd['additional_details']['adduct'] = adduct
 
     # ============== Create CLI cmd for metfrag ===============================
-    cmd = "sirius --no-citations --ms2 {} --adduct {} --precursor {} -o {} " \
+    cmd = "sirius --cores {} --no-citations --ms2 {} --adduct {} --precursor {} -o {} " \
           "formula -c {} --ppm-max {} --profile {} " \
           "structure --database {} canopus".format(
+                       paramd["cli"]["--cores"],
                        paramd["cli"]["--ms2"],
                        adduct,
                        paramd["cli"]["--precursor"],
@@ -388,6 +391,7 @@ def concat_output(filename, result_pth,
                 ad = paramds[fn.split(os.sep)[-2]]['additional_details']
 
                 for line in reader:
+
                     if 'rank' in line \
                             and 0 < int(rank_filter) < int(line['rank']):
                         # filter out those annotations greater than rank filter
