@@ -12,7 +12,7 @@ Source code: https://github.com/boecker-lab/sirius
 Version
 ------
 
-v4.9.8+Galaxy1
+v4.9.8+Galaxy3
 
 Galaxy
 ------
@@ -34,6 +34,9 @@ Developers & Contributors
 
 Changes
 -------
+v4.9.8+Galaxy3:
+ - Version bump for toolshed installation
+
 v4.9.8+Galaxy2:
  - Remove backwards compatibility option
  - Check for N/A values for confidence filter
