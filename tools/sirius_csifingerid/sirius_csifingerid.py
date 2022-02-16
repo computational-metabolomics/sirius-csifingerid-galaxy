@@ -352,12 +352,15 @@ if int(args.cores_top_level) > 1:
 # glob.glob(os.path.join(wd, "*_metfrag_result.csv"))]
 def concat_output(wd, filename, result_pth, level=2):
 
-    if level==2:
+    if level == 2:
         outfiles = glob.glob(os.path.join(wd, '*', filename))
     else:
         outfiles = glob.glob(os.path.join(wd, '*', '*', filename))
 
-    outfiles.sort(key=lambda s: int(re.match(r'.*/([0-9]+).*/{}$'.format(filename), s).group(1)))
+    outfiles.sort(
+        key=lambda s: int(
+            re.match(r'.*/([0-9]+).*/{}$'.format(filename),
+                     s).group(1)))
     print(outfiles)
     if len(outfiles) == 0:
         print('No results')
