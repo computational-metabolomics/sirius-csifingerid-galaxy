@@ -196,13 +196,7 @@
             <output name="annotation_results" file="annotation_RP022611_result_all_adducts.tsv"/>
             <output name="canopus_results" file="canopus_RP022611_result_all_adducts.tsv"/>
         </test>
-        <test>
-            <!-- Test confidence filter  -->
-            <param name="input" value="generic.msp" ftype="msp"/>
-            <param name="confidence_filter" value="0.7"/>
-            <output name="annotation_results" file="cf_annotation_generic_msp_result.tsv"/>
-            <output name="canopus_results" file="cf_canopus_generic_msp_result.tsv"/>
-        </test>
+
     </tests>
     <help>
 ----------------
