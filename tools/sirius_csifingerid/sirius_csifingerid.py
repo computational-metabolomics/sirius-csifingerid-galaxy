@@ -14,6 +14,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--input_pth')
 parser.add_argument('--canopus_result_pth')
 parser.add_argument('--annotations_result_pth')
+parser.add_argument('--all_structures_result_pth')
 parser.add_argument('--database')
 parser.add_argument('--profile')
 parser.add_argument('--candidates')
@@ -28,8 +29,6 @@ parser.add_argument('--cores_top_level', default=1)
 parser.add_argument('--cores_sirius', default=4)
 parser.add_argument('--chunks', default=1)
 parser.add_argument('--min_MSMS_peaks', default=1)
-parser.add_argument('--rank_filter', default=0)
-parser.add_argument('--confidence_filter', default=0)
 parser.add_argument('--schema', default='msp')
 parser.add_argument('-a', '--adducts', action='append', nargs=1,
                     required=False, default=[], help='Adducts used')
@@ -218,7 +217,8 @@ def run_sirius(meta_info, peaklist, args, wd, spectrac):
         paramd['additional_details']['adduct'] = adduct
 
     # ============== Create CLI cmd for metfrag ===============================
-    cmd = "sirius --cores {} --no-citations --ms2 {} --adduct {} --precursor {} -o {} " \
+    cmd = "sirius --cores {} --no-citations --ms2 {} --adduct {} " \
+          "--precursor {} -o {} " \
           "formula -c {} --ppm-max {} --profile {} " \
           "structure --database {} canopus".format(
                        paramd["cli"]["--cores"],
@@ -350,16 +350,15 @@ if int(args.cores_top_level) > 1:
 # outputs might have different headers. Need to get a list of all the headers
 # before we start merging the files outfiles = [os.path.join(wd, f) for f in
 # glob.glob(os.path.join(wd, "*_metfrag_result.csv"))]
-def concat_output(filename, result_pth,
-                  rank_filter, confidence_filter):
-    outfiles = glob.glob(os.path.join(wd, '*', '*{}'.format(filename)))
+def concat_output(wd, filename, result_pth, level=2):
 
-    # sort files nicely
-    outfiles.sort(key=lambda s: int(re.match(r'^.*/('
-                                             r'\d+).*{}'.format(filename),
-                                             s).group(1)))
+    if level==2:
+        outfiles = glob.glob(os.path.join(wd, '*', filename))
+    else:
+        outfiles = glob.glob(os.path.join(wd, '*', '*', filename))
+
+    outfiles.sort(key=lambda s: int(re.match(r'.*/([0-9]+).*/{}$'.format(filename), s).group(1)))
     print(outfiles)
-
     if len(outfiles) == 0:
         print('No results')
         sys.exit()
@@ -388,37 +387,24 @@ def concat_output(filename, result_pth,
             with open(fn) as infile:
                 reader = csv.DictReader(infile, delimiter='\t')
 
-                ad = paramds[fn.split(os.sep)[-2]]['additional_details']
+                ad = paramds[fn.split(os.sep)[-level]]['additional_details']
 
                 for line in reader:
 
-                    if 'rank' in line \
-                            and 0 < int(rank_filter) < int(line['rank']):
-                        # filter out those annotations greater than rank filter
-                        # If rank_filter is zero then skip
-                        continue
-
-                    if 'ConfidenceScore' in line:
-                        if isinstance(line['ConfidenceScore'], str):
-                            # Value is NA or N/A
-                            continue
-
-                        if (0 < float(confidence_filter)
-                            and float(line['ConfidenceScore'])
-                                < float(confidence_filter)):
-                            # filter out those annotations that are less than
-                            # the confidence filter value
-                            continue
                     line.update(ad)
 
                     dwriter.writerow(line)
 
 
-concat_output('compound_identifications.tsv',
-              args.annotations_result_pth,
-              args.rank_filter,
-              args.confidence_filter)
-concat_output('canopus_summary.tsv',
-              args.canopus_result_pth,
-              0,
-              0)
+concat_output(wd,
+              'compound_identifications.tsv',
+              args.annotations_result_pth)
+
+concat_output(wd,
+              'canopus_summary.tsv',
+              args.canopus_result_pth)
+
+concat_output(wd,
+              'structure_candidates.tsv',
+              args.all_structures_result_pth,
+              level=3)

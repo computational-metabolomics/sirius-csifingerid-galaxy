@@ -12,7 +12,7 @@ Source code: https://github.com/boecker-lab/sirius
 Version
 ------
 
-v4.9.8+Galaxy3
+v4.9.8+Galaxy4
 
 Galaxy
 ------
@@ -34,6 +34,11 @@ Developers & Contributors
 
 Changes
 -------
+v4.9.8+Galaxy4:
+ - Troubleshooted web-api (problems)
+ - Remove confidence and rank filter
+ - Add all structures as output
+
 v4.9.8+Galaxy3:
  - Version bump for toolshed installation
 
