@@ -1,14 +1,13 @@
 <tool id="sirius_csifingerid" name="SIRIUS-CSI:FingerID"
-      version="4.9.8+galaxy4" profile="19.05">
+      version="5.8.6+galaxy0" profile="22.05">
     <description>is used to identify metabolites using single and
         tandem mass spectrometry</description>
     <requirements>
-        <requirement type="package" version="4.9.8">
-            sirius-csifingerid</requirement>
+        <requirement type="package" version="5.8.6">sirius-csifingerid</requirement>
     </requirements>
     <command detect_errors="exit_code">
     <![CDATA[
-        export _JAVA_OPTIONS=-Duser.home=$__new_file_path__ &&
+        export _JAVA_OPTIONS=-Duser.home=\${TMPDIR:-.} &&
         python '$__tool_directory__/sirius_csifingerid.py'
             --input_pth '$input'
             --database $database
@@ -25,7 +24,7 @@
             --meta_select_col $meta_select_col
             --min_MSMS_peaks $min_MSMS_peaks
             --schema $schema
-            --temp_dir $__new_file_path__
+            --temp_dir \${TMPDIR:-.}
 
             #if $adducts_cond.adducts_selector == 'select':
                 #for $a in $adducts_cond.adducts
@@ -48,9 +47,6 @@
                     --adducts [M+CH3COO]-
                  #end if
             #end if
-
-
-
     ]]></command>
     <inputs>
         <param name="input" argument="--input_pth" type="data" format="msp"
