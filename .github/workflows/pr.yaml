@@ -2,13 +2,13 @@ name: Galaxy Tool Linting and Tests for push and PR
 on: [push, pull_request]
 env:
   GALAXY_FORK: galaxyproject
-  GALAXY_BRANCH: release_21.09
+  GALAXY_BRANCH: release_24.1
   MAX_CHUNKS: 4
   MAX_FILE_SIZE: 1M
 concurrency:
-  # group runs by PR, but keep runs on master separate
+  # group runs by PR, but keep runs on main separate
   # because we do not want to cancel toolshed uploads
-  group: pr-${{ (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') && github.run_number || github.ref }}
+  group: pr-${{ (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/main') && github.run_number || github.ref }}
   cancel-in-progress: true
 jobs:
   # the setup job does two things:
@@ -19,6 +19,7 @@ jobs:
   # - a file containing the list of changed repositories
   # which are needed in subsequent steps.
   setup:
+  
     name: Setup cache and determine changed repositories
     runs-on: ubuntu-latest
     outputs:
@@ -171,7 +172,7 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 1
-    - uses: r-lib/actions/setup-r@master
+    - uses: r-lib/actions/setup-r@main
       with:
         r-version: ${{ matrix.r-version }}
     - name: Cache R packages
@@ -350,7 +351,7 @@ jobs:
   deploy:
     name: Deploy
     needs: [setup, lint, flake8, lintr]
-    if: ${{ (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' ) && github.repository_owner == 'computational-metabolomics' }}
+    if: ${{ (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/main' ) && github.repository_owner == 'computational-metabolomics' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -387,7 +388,7 @@ jobs:
   determine-success:
     name: Check workflow success
     needs: [setup, lint, flake8, lintr, file_sizes]
-    if: ${{ always() && github.ref != 'refs/heads/master' && github.ref != 'refs/heads/main' }}
+    if: ${{ always() && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/main' }}
     runs-on: ubuntu-latest
     steps:
     - name: Check tool lint status
