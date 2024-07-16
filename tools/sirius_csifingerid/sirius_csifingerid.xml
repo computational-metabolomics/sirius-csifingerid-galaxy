@@ -1,57 +1,76 @@
 <tool id="sirius_csifingerid" name="SIRIUS-CSI:FingerID"
-      version="4.9.8+galaxy4" profile="19.05">
+      version="5.8.6+galaxy0" profile="24.0">
     <description>is used to identify metabolites using single and
         tandem mass spectrometry</description>
     <requirements>
-        <requirement type="package" version="4.9.8">
-            sirius-csifingerid</requirement>
+        <requirement type="package" version="5.8.6">sirius-csifingerid</requirement>
     </requirements>
     <command detect_errors="exit_code">
     <![CDATA[
-        export _JAVA_OPTIONS=-Duser.home=$__new_file_path__ &&
-        python '$__tool_directory__/sirius_csifingerid.py'
-            --input_pth '$input'
-            --database $database
-            --profile $profile
-            --candidates $candidates
-            --ppm_max $ppm_max
-            --polarity $polarity
-            --out_dir $__new_file_path__
-            --canopus_result_pth canopus_all_summary.tsv
-            --annotations_result_pth annotations_all_summary.tsv
-            --all_structures_result_pth structures_all_summary.tsv
-            --cores_top_level 1
-            --cores_sirius \${GALAXY_SLOTS:-4}
-            --meta_select_col $meta_select_col
-            --min_MSMS_peaks $min_MSMS_peaks
-            --schema $schema
-            --temp_dir $__new_file_path__
+        #set $username = $__user__.extra_preferences.get('sirius_account|username', "")
+        #if $username == "":
+            echo "Credentials for Sirius are available via: User -> Preferences -> Manage Information"
+        #end if
+            echo "Running Sirius as user: $username" &&
+            export _JAVA_OPTIONS=-Duser.home=$__new_file_path__ &&
+            python '$__tool_directory__/sirius_csifingerid.py'
+                --input_pth '$input'
+                --database $database
+                --profile $profile
+                --candidates $candidates
+                --ppm_max $ppm_max
+                --polarity $polarity
+                --out_dir $__new_file_path__
+                --canopus_result_pth canopus_all_summary.tsv
+                --annotations_result_pth annotations_all_summary.tsv
+                --all_structures_result_pth structures_all_summary.tsv
+                --cores_top_level 1
+                --cores_sirius \${GALAXY_SLOTS:-4}
+                --meta_select_col $meta_select_col
+                --min_MSMS_peaks $min_MSMS_peaks
+                --schema $schema
+                --temp_dir $__new_file_path__
+                --credentials '$credentials'
 
-            #if $adducts_cond.adducts_selector == 'select':
-                #for $a in $adducts_cond.adducts
-                    --adducts $a
-                #end for
-            #elif $adducts_cond.adducts_selector == 'all':
-                #if $polarity == 'positive':
-                    --adducts [M+H]+
-                    --adducts [M+NH4]+
-                    --adducts [M+Na]+
-                    --adducts [M+K]+
-                    --adducts [M+CH3OH+H]+
-                    --adducts [M+ACN+H]+
-                    --adducts [M+ACN+Na]+
-                    --adducts [M+2ACN+H]+
-                 #elif $polarity == 'negative':
-                    --adducts [M-H]-
-                    --adducts [M+Cl]-
-                    --adducts [M+HCOO]-
-                    --adducts [M+CH3COO]-
-                 #end if
-            #end if
-
-
-
+                #if $adducts_cond.adducts_selector == 'select':
+                    #for $a in $adducts_cond.adducts
+                        --adducts $a
+                    #end for
+                #elif $adducts_cond.adducts_selector == 'all':
+                    #if $polarity == 'positive':
+                        --adducts [M+H]+
+                        --adducts [M+NH4]+
+                        --adducts [M+Na]+
+                        --adducts [M+K]+
+                        --adducts [M+CH3OH+H]+
+                        --adducts [M+ACN+H]+
+                        --adducts [M+ACN+Na]+
+                        --adducts [M+2ACN+H]+
+                    #elif $polarity == 'negative':
+                        --adducts [M-H]-
+                        --adducts [M+Cl]-
+                        --adducts [M+HCOO]-
+                        --adducts [M+CH3COO]-
+                    #end if
+                #end if
     ]]></command>
+    <configfiles>
+        <configfile name="credentials"><![CDATA[
+#import os
+#if os.environ.get('USERNAME_SIRIUS') is not None:
+    #set $username = os.environ.get('USERNAME_SIRIUS')
+    #set $password = os.environ.get('PASSWORD_SIRIUS')
+#else:
+    #set $username = $__user__.extra_preferences.get('sirius_account|username', "")
+    #set $password = $__user__.extra_preferences.get('sirius_account|password', "")
+#end if
+
+{
+    "username": "$username",
+    "password": "$password"
+}
+        ]]></configfile>
+    </configfiles>
     <inputs>
         <param name="input" argument="--input_pth" type="data" format="msp"
                label="MSP file (output from Create MSP tool)" />
@@ -196,7 +215,6 @@
             <output name="annotation_results" file="annotation_RP022611_result_all_adducts.tsv"/>
             <output name="canopus_results" file="canopus_RP022611_result_all_adducts.tsv"/>
         </test>
-
     </tests>
     <help>
 ----------------

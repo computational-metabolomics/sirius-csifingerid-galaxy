@@ -1,5 +1,6 @@
 import argparse
 import csv
+import json
 import glob
 import multiprocessing
 import os
@@ -8,7 +9,6 @@ import sys
 import tempfile
 import uuid
 from collections import defaultdict
-
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--input_pth')
@@ -32,12 +32,21 @@ parser.add_argument('--min_MSMS_peaks', default=1)
 parser.add_argument('--schema', default='msp')
 parser.add_argument('-a', '--adducts', action='append', nargs=1,
                     required=False, default=[], help='Adducts used')
+parser.add_argument('--credentials')
 
 args = parser.parse_args()
 print(args)
 if os.stat(args.input_pth).st_size == 0:
     print('Input file empty')
     exit()
+
+with open(args.credentials) as f:
+    credentials = json.load(f)
+
+cmd_login = "sirius login " \
+            "--user='{}' " \
+            "--password='{}'".format(credentials["username"], credentials["password"])
+os.system(cmd_login)
 
 if args.temp_dir:
     wd = os.path.join(args.temp_dir, 'temp_'+str(uuid.uuid4()))
@@ -216,12 +225,13 @@ def run_sirius(meta_info, peaklist, args, wd, spectrac):
         # If possible always good to have the adduct in output as a column
         paramd['additional_details']['adduct'] = adduct
 
-    # ============== Create CLI cmd for metfrag ===============================
+    # ============== cmd for Sirius ===============================
     cmd = "sirius --cores {} --no-citations --ms2 {} --adduct {} " \
           "--precursor {} -o {} " \
           "formula -c {} --ppm-max {} --profile {} " \
-          "structure --database {} canopus".format(
-                       paramd["cli"]["--cores"],
+          "fingerprint " \
+          "structure --database {} " \
+          "canopus".format(paramd["cli"]["--cores"],
                        paramd["cli"]["--ms2"],
                        adduct,
                        paramd["cli"]["--precursor"],
@@ -312,9 +322,6 @@ with open(args.input_pth, "r") as infile:
             pnumlines = 0
             plinesread = 0
 
-            # end of file. Check if there is a MSP spectra to
-            # run metfrag on still
-
     if plinesread and plinesread == pnumlines:
         if adducts_from_cli:
             for adduct in adducts_from_cli:
@@ -349,7 +356,6 @@ if int(args.cores_top_level) > 1:
 ######################################################################
 # outputs might have different headers. Need to get a list of all the headers
 # before we start merging the files outfiles = [os.path.join(wd, f) for f in
-# glob.glob(os.path.join(wd, "*_metfrag_result.csv"))]
 def concat_output(wd, filename, result_pth, level=2):
 
     if level == 2:
@@ -404,7 +410,7 @@ concat_output(wd,
               args.annotations_result_pth)
 
 concat_output(wd,
-              'canopus_summary.tsv',
+              'canopus_compound_summary.tsv',
               args.canopus_result_pth)
 
 concat_output(wd,
