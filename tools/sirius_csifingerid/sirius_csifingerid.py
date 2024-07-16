@@ -1,7 +1,7 @@
 import argparse
 import csv
-import json
 import glob
+import json
 import multiprocessing
 import os
 import re
@@ -45,7 +45,8 @@ with open(args.credentials) as f:
 
 cmd_login = "sirius login " \
             "--user='{}' " \
-            "--password='{}'".format(credentials["username"], credentials["password"])
+            "--password='{}'".format(credentials["username"],
+                                     credentials["password"])
 os.system(cmd_login)
 
 if args.temp_dir:
@@ -232,15 +233,15 @@ def run_sirius(meta_info, peaklist, args, wd, spectrac):
           "fingerprint " \
           "structure --database {} " \
           "canopus".format(paramd["cli"]["--cores"],
-                       paramd["cli"]["--ms2"],
-                       adduct,
-                       paramd["cli"]["--precursor"],
-                       paramd["cli"]["--output"],
-                       paramd["cli"]["--candidates"],
-                       paramd["cli"]["--ppm-max"],
-                       paramd["cli"]["--profile"],
-                       paramd["cli"]["--database"]
-          )
+                           paramd["cli"]["--ms2"],
+                           adduct,
+                           paramd["cli"]["--precursor"],
+                           paramd["cli"]["--output"],
+                           paramd["cli"]["--candidates"],
+                           paramd["cli"]["--ppm-max"],
+                           paramd["cli"]["--profile"],
+                           paramd["cli"]["--database"]
+                           )
     print(cmd)
     paramds[paramd["SampleName"]] = paramd
 
