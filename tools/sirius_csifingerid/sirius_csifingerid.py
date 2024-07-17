@@ -232,16 +232,17 @@ def run_sirius(meta_info, peaklist, args, wd, spectrac):
           "formula -c {} --ppm-max {} --profile {} " \
           "fingerprint " \
           "structure --database {} " \
-          "canopus".format(paramd["cli"]["--cores"],
-                           paramd["cli"]["--ms2"],
-                           adduct,
-                           paramd["cli"]["--precursor"],
-                           paramd["cli"]["--output"],
-                           paramd["cli"]["--candidates"],
-                           paramd["cli"]["--ppm-max"],
-                           paramd["cli"]["--profile"],
-                           paramd["cli"]["--database"]
-                           )
+          "canopus " \
+          "write-summaries".format(paramd["cli"]["--cores"],
+                                   paramd["cli"]["--ms2"],
+                                   adduct,
+                                   paramd["cli"]["--precursor"],
+                                   paramd["cli"]["--output"],
+                                   paramd["cli"]["--candidates"],
+                                   paramd["cli"]["--ppm-max"],
+                                   paramd["cli"]["--profile"],
+                                   paramd["cli"]["--database"]
+                                   )
     print(cmd)
     paramds[paramd["SampleName"]] = paramd
 
