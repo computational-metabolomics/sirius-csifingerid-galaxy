@@ -290,7 +290,7 @@ jobs:
         galaxy-branch: ${{ env.GALAXY_BRANCH }}
         chunk: ${{ matrix.chunk }}
         chunk-count: ${{ needs.setup.outputs.chunk-count }}
-        additional-planemo-options: "format('--job_config_file {0}/config/job_conf_planemo_subst.xml', github.workspace)"
+        additional-planemo-options: --job_config_file "${{ github.workspace }}/config/job_conf_planemo_subst.xml"
     - uses: actions/upload-artifact@v2
       with:
         name: 'Tool test output ${{ matrix.chunk }}'
