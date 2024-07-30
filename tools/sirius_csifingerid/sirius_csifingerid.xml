@@ -7,10 +7,15 @@
     </requirements>
     <command detect_errors="exit_code">
     <![CDATA[
-        #set $username = $__user__.extra_preferences.get('sirius_account|username', "")
+        #import os
+        #if os.environ.get('USERNAME_SIRIUS') is not None:
+            #set $username = os.environ.get('USERNAME_SIRIUS')
+        #else:
+            #set $username = $__user__.extra_preferences.get('sirius_account|username', "")
+        #end if
         #if $username == "":
             echo "Credentials for Sirius are available via: User -> Preferences -> Manage Information"
-        #end if
+        #else:
             echo "Running Sirius as user: $username" &&
             export _JAVA_OPTIONS=-Duser.home=$__new_file_path__ &&
             python '$__tool_directory__/sirius_csifingerid.py'
@@ -53,6 +58,7 @@
                         --adducts [M+CH3COO]-
                     #end if
                 #end if
+        #end if
     ]]></command>
     <configfiles>
         <configfile name="credentials"><![CDATA[

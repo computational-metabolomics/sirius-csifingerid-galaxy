@@ -269,9 +269,20 @@ jobs:
       with:
         path: ~/.planemo
         key: planemo_cache_py_${{ matrix.python-version }}_gxy_${{ needs.setup.outputs.galaxy-head-sha }}
+    - name: Prepare specific job_conf for Sirius
+      uses: danielr1996/envsubst-action@1.0.0
+      env:
+        USERNAME_SIRIUS: "${{ secrets.USERNAME_SIRIUS }}"
+        PASSWORD_SIRIUS: "${{ secrets.PASSWORD_SIRIUS }}"
+      with:
+        input: "${{ github.workspace }}/job_conf_planemo.xml"
+        output: "${{ github.workspace }}/job_conf_planemo_subst.xml"
     - name: Planemo test
       uses: galaxyproject/planemo-ci-action@v1
       id: test
+      env:
+        USERNAME_SIRIUS: "${{ secrets.USERNAME_SIRIUS }}"
+        PASSWORD_SIRIUS: "${{ secrets.PASSWORD_SIRIUS }}"
       with:
         mode: test
         repository-list: ${{ needs.setup.outputs.repository-list }}
@@ -279,6 +290,7 @@ jobs:
         galaxy-branch: ${{ env.GALAXY_BRANCH }}
         chunk: ${{ matrix.chunk }}
         chunk-count: ${{ needs.setup.outputs.chunk-count }}
+        additional-planemo-options: "format('--job_config_file {0}/config/job_conf_planemo_subst.xml', github.workspace)}}"
     - uses: actions/upload-artifact@v2
       with:
         name: 'Tool test output ${{ matrix.chunk }}'

@@ -1,0 +1,27 @@
+<!-- Override the default planemo job_conf file to allow passing env vars to apollo tools -->
+<!-- see https://github.com/galaxyproject/planemo-ci-action/issues/39 -->
+<job_conf>
+    <plugins>
+        <plugin id="planemo_runner" type="runner" load="galaxy.jobs.runners.local:LocalJobRunner" workers="4"/>
+    </plugins>
+    <handlers>
+    </handlers>
+    <destinations default="planemo_dest">
+        <destination id="planemo_dest" runner="planemo_runner">
+            <param id="require_container">false</param>
+            <param id="docker_enabled">true</param>
+            <param id="docker_sudo">false</param>
+            <param id="docker_sudo_cmd">sudo</param>
+            <param id="docker_cmd">docker</param>
+            <param id="docker_run_extra_arguments">-e USERNAME_SIRIUS='${USERNAME_SIRIUS}' -e PASSWORD_SIRIUS='${PASSWORD_SIRIUS}'</param>
+            <env id="USERNAME_SIRIUS">${USERNAME_SIRIUS}</env>
+            <env id="PASSWORD_SIRIUS">${PASSWORD_SIRIUS}</env>
+        </destination>
+        <destination id="upload_dest" runner="planemo_runner">
+            <param id="docker_enabled">false</param>
+        </destination>
+    </destinations>
+    <tools>
+        <tool id="upload1" destination="upload_dest" />
+    </tools>
+</job_conf>
