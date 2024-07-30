@@ -275,8 +275,8 @@ jobs:
         USERNAME_SIRIUS: "${{ secrets.USERNAME_SIRIUS }}"
         PASSWORD_SIRIUS: "${{ secrets.PASSWORD_SIRIUS }}"
       with:
-        input: "${{ github.workspace }}/job_conf_planemo.xml"
-        output: "${{ github.workspace }}/job_conf_planemo_subst.xml"
+        input: "${{ github.workspace }}/config/job_conf_planemo.xml"
+        output: "${{ github.workspace }}/config/job_conf_planemo_subst.xml"
     - name: Planemo test
       uses: galaxyproject/planemo-ci-action@v1
       id: test
@@ -290,7 +290,7 @@ jobs:
         galaxy-branch: ${{ env.GALAXY_BRANCH }}
         chunk: ${{ matrix.chunk }}
         chunk-count: ${{ needs.setup.outputs.chunk-count }}
-        additional-planemo-options: "format('--job_config_file {0}/config/job_conf_planemo_subst.xml', github.workspace)}}"
+        additional-planemo-options: "format('--job_config_file {0}/config/job_conf_planemo_subst.xml', github.workspace)"
     - uses: actions/upload-artifact@v2
       with:
         name: 'Tool test output ${{ matrix.chunk }}'
