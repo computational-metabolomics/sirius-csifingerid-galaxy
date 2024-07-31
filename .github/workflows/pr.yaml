@@ -2,13 +2,13 @@ name: Galaxy Tool Linting and Tests for push and PR
 on: [push, pull_request]
 env:
   GALAXY_FORK: galaxyproject
-  GALAXY_BRANCH: release_21.09
+  GALAXY_BRANCH: release_24.1
   MAX_CHUNKS: 4
   MAX_FILE_SIZE: 1M
 concurrency:
-  # group runs by PR, but keep runs on master separate
+  # group runs by PR, but keep runs on main separate
   # because we do not want to cancel toolshed uploads
-  group: pr-${{ (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') && github.run_number || github.ref }}
+  group: pr-${{ (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/main') && github.run_number || github.ref }}
   cancel-in-progress: true
 jobs:
   # the setup job does two things:
@@ -19,6 +19,7 @@ jobs:
   # - a file containing the list of changed repositories
   # which are needed in subsequent steps.
   setup:
+  
     name: Setup cache and determine changed repositories
     runs-on: ubuntu-latest
     outputs:
@@ -30,7 +31,7 @@ jobs:
       commit-range: ${{ steps.discover.outputs.commit-range }}
     strategy:
       matrix:
-        python-version: ['3.7']
+        python-version: ['3.11']
     steps:
     - name: Print github context properties
       run: |
@@ -96,7 +97,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.7']
+        python-version: ['3.11']
     steps:
     # checkout the repository
     # and use it as the current working directory
@@ -134,7 +135,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.7']
+        python-version: ['3.11']
     steps:
     - uses: actions/checkout@v2
       with:
@@ -166,52 +167,32 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-20.04]
-        r-version: ['4.0.1']
+        r-version: ['release']
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 1
-    - uses: r-lib/actions/setup-r@master
+    - uses: r-lib/actions/setup-r@v2
       with:
         r-version: ${{ matrix.r-version }}
     - name: Cache R packages
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         path: ${{ env.R_LIBS_USER }}
         key: r_cache_${{ matrix.os }}_${{ matrix.r-version }}
-    - name: Install non-R lintr dependencies
-      run: sudo apt-get install libcurl4-openssl-dev
-    - name: Install lintr
-      run: |
-        install.packages('remotes')
-        remotes::install_cran("lintr")
-      shell: Rscript {0}
-    - name: Save repositories to file
-      run: echo '${{ needs.setup.outputs.repository-list }}' > repository_list.txt
+    - name: Install packages
+      uses: r-lib/actions/setup-r-dependencies@v2
+      with:
+        packages: |
+          any::argparse 
+          any::styler
     - name: lintr
       run: |
-        library(lintr)
-        linters <- with_defaults(line_length_linter = NULL, cyclocomp_linter = NULL, object_usage_linter = NULL)
-        con <- file("repository_list.txt", "r")
-        status <- 0
-        while (TRUE) {
-          repo <- readLines(con, n = 1)
-          if (length(repo) == 0) {
-             break
-          }
-          lnt <- lint_dir(repo, relative_path=T, linters=linters)
-          if (length(lnt) > 0) {
-            status <- 1
-            for (l in lnt) {
-              rel_path <- paste(repo, l$filename, sep="/")
-              write(paste(paste(rel_path, l$line_number, l$column_number, sep=":"), l$message), stderr())
-              write(paste(paste(rel_path, l$line_number, l$column_number, sep=":"), l$message), "rlint_report.txt", append=TRUE)
-            }
-          }
-        }
-        quit(status = status)
-      shell: Rscript {0}
-    - uses: actions/upload-artifact@v2
+        set -eo pipefail
+        echo '${{ needs.setup.outputs.repository-list }}' | xargs -d '\n' -n 1 ./.github/styler.R --dry off
+        git status
+        git diff --exit-code | tee rlint_report.txt
+    - uses: actions/upload-artifact@v4
       if: ${{ failure() }}
       with:
         name: 'R linting output'
@@ -257,7 +238,7 @@ jobs:
       fail-fast: false
       matrix:
         chunk: ${{ fromJson(needs.setup.outputs.chunk-list) }}
-        python-version: ['3.7']
+        python-version: ['3.11']
     services:
       postgres:
         image: postgres:11
@@ -288,9 +269,20 @@ jobs:
       with:
         path: ~/.planemo
         key: planemo_cache_py_${{ matrix.python-version }}_gxy_${{ needs.setup.outputs.galaxy-head-sha }}
+    - name: Prepare specific job_conf for Sirius
+      uses: danielr1996/envsubst-action@1.0.0
+      env:
+        USERNAME_SIRIUS: "${{ secrets.USERNAME_SIRIUS }}"
+        PASSWORD_SIRIUS: "${{ secrets.PASSWORD_SIRIUS }}"
+      with:
+        input: "${{ github.workspace }}/config/job_conf_planemo.xml"
+        output: "${{ github.workspace }}/config/job_conf_planemo_subst.xml"
     - name: Planemo test
       uses: galaxyproject/planemo-ci-action@v1
       id: test
+      env:
+        USERNAME_SIRIUS: "${{ secrets.USERNAME_SIRIUS }}"
+        PASSWORD_SIRIUS: "${{ secrets.PASSWORD_SIRIUS }}"
       with:
         mode: test
         repository-list: ${{ needs.setup.outputs.repository-list }}
@@ -298,6 +290,7 @@ jobs:
         galaxy-branch: ${{ env.GALAXY_BRANCH }}
         chunk: ${{ matrix.chunk }}
         chunk-count: ${{ needs.setup.outputs.chunk-count }}
+        additional-planemo-options: --job_config_file ${{ github.workspace }}/config/job_conf_planemo_subst.xml
     - uses: actions/upload-artifact@v2
       with:
         name: 'Tool test output ${{ matrix.chunk }}'
@@ -307,63 +300,70 @@ jobs:
   #   to `|| true`) and create a global test report as json and html which
   #   is provided as artifact
   # - check if any tool test actually failed (by lookup in the combined json)
-#  #   and fail this step if this is the case
-#  SEEMS TO BE FAILING ON CONDA - UNABLE TO FIX
-#  combine_outputs:
-#    name: Combine chunked test results
-#    needs: [setup, test]
-#    if: ${{ needs.setup.outputs.repository-list != '' }}
-#    runs-on: ubuntu-latest
-#    strategy:
-#      matrix:
-#        python-version: ['3.7']
-#    steps:
-#    - uses: actions/download-artifact@v2
-#      with:
-#        path: artifacts
-#    - uses: actions/setup-python@v1
-#      with:
-#        python-version: ${{ matrix.python-version }}
-#    - name: Cache .cache/pip
-#      uses: actions/cache@v2
-#      id: cache-pip
-#      with:
-#        path: ~/.cache/pip
-#        key: pip_cache_py_${{ matrix.python-version }}_gxy_${{ needs.setup.outputs.galaxy-head-sha }}
-#    - name: Combine outputs
-#      uses: galaxyproject/planemo-ci-action@v1
-#      id: combine
-#      with:
-#        mode: combine
-#        html-report: true
-#    - uses: actions/upload-artifact@v2
-#      with:
-#        name: 'All tool test results'
-#        path: upload
-#    - name: Check outputs
-#      uses: galaxyproject/planemo-ci-action@v1
-#      id: check
-#      with:
-#        mode: check
+  #   and fail this step if this is the case
+  combine_outputs:
+    name: Combine chunked test results
+    needs: [setup, test]
+    if: ${{ always() && needs.setup.outputs.repository-list != '' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.11']
+    steps:
+    - uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Cache .cache/pip
+      uses: actions/cache@v4
+      id: cache-pip
+      with:
+        path: ~/.cache/pip
+        key: pip_cache_py_${{ matrix.python-version }}_gxy_${{ needs.setup.outputs.galaxy-head-sha }}
+    - name: Combine outputs
+      uses: galaxyproject/planemo-ci-action@v1
+      id: combine
+      with:
+        mode: combine
+        html-report: true
+        markdown-report: true
+    - uses: actions/upload-artifact@v4
+      with:
+        name: 'All tool test results'
+        path: upload
+    - run: cat upload/tool_test_output.md >> $GITHUB_STEP_SUMMARY
+    - name: Check outputs
+      uses: galaxyproject/planemo-ci-action@v1
+      id: check
+      with:
+        mode: check
+    - name: Check if all test chunks succeeded
+      run: |
+        NFILES=$(ls artifacts/ | grep "Tool test output" | wc -l)
+        if [[ "${{ needs.setup.outputs.chunk-count }}" != "$NFILES" ]]; then
+          exit 1
+        fi
 
   # deploy the tools to the toolsheds (first TTS for testing)
   deploy:
     name: Deploy
-    needs: [setup, lint, flake8, lintr]
+    needs: [setup, lint, combine_outputs]
     if: ${{ (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' ) && github.repository_owner == 'computational-metabolomics' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.7']
+        python-version: ['3.11']
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 1
-    - uses: actions/setup-python@v1
+    - uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     - name: Cache .cache/pip
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       id: cache-pip
       with:
         path: ~/.cache/pip
@@ -386,7 +386,7 @@ jobs:
 
   determine-success:
     name: Check workflow success
-    needs: [setup, lint, flake8, lintr, file_sizes]
+    needs: [setup, lint, flake8, lintr, file_sizes, combine_outputs]
     if: ${{ always() && github.ref != 'refs/heads/master' && github.ref != 'refs/heads/main' }}
     runs-on: ubuntu-latest
     steps:
@@ -402,6 +402,6 @@ jobs:
     - name: Indicate file size check status
       if: ${{ needs.file_sizes.result != 'success' && needs.file_sizes.result != 'skipped' }}
       run: exit 1
-#    - name: Check tool test status
-#      if: ${{ needs.combine_outputs.result != 'success' && needs.combine_outputs.result != 'skipped' }}
-#      run: exit 1
+    - name: Check tool test status
+      if: ${{ needs.combine_outputs.result != 'success' && needs.combine_outputs.result != 'skipped' }}
+      run: exit 1

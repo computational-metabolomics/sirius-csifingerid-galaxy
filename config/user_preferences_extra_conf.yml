@@ -1,0 +1,13 @@
+preferences:
+    sirius_account:
+        description: Sirius account
+        inputs:
+            - name: username
+              label: Username (email)
+              type: text
+              required: False
+            - name: password
+              label: Password
+              type: password
+              required: False
+
